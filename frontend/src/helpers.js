@@ -35,14 +35,16 @@ export function createElement(tag, data, options = {}) {
  * @returns {HTMLElement}
  */
 export function createPostTile(post) {
-    const section = createElement('section', null, { class: 'post' });
-
-    section.appendChild(createElement('h2', post.meta.author, { class: 'post-title' }));
-
+    const section = createElement('section', null, { class: 'post'});
+	section.style.backgroundColor = 'black';
+    section.appendChild(createElement('h2', post.meta.author, { id:post.id+'-post-title', class: 'post-title', style:'color: rgb(30, 197, 3);'}));
+	section.appendChild(createElement('p', post.meta.published.substring(0, 24), { id:post.id+'-post-published', class: 'post-published', style:'color: rgb(30, 197, 3);'}));
+	//https://stackoverflow.com/questions/1347675/html-img-scaling
     section.appendChild(createElement('img', null,
-        { src: '/images/'+post.src, alt: post.meta.description_text, class: 'post-image' }));
-
-    return section;
+        { id:post.id+'-post-image', src: '/images/'+post.src, alt: post.meta.description_text, class: 'post-image', style:'width:70%;height:70%;'}));
+	section.appendChild(createElement('p', '(y) '+post.meta.likes.length, { id:post.id+'-post-likes', class: 'post-likes', style:'color: rgb(30, 197, 3);display: inline;'}));
+	section.appendChild(createElement('p', '(c) '+post.meta.comments.length, { id:post.id+'-post-comments', class: 'post-comments', style:'color: rgb(30, 197, 3); display: inline;'}));
+	return section;
 }
 
 
@@ -71,7 +73,7 @@ export function uploadImage(event) {
     reader.readAsDataURL(file);
 }
 
-/*
+/**
     Reminder about localStorage
     window.localStorage.setItem('AUTH_KEY', someKey);
     window.localStorage.getItem('AUTH_KEY');
@@ -89,6 +91,7 @@ export function checkStore(key) {
 /***********************************************************
 General Functions
 ***********************************************************/
+
 /**
  *	takes a parent element and a child element
  *	and then returns the parent with child element added to its body
@@ -97,7 +100,8 @@ export function appendElement(parent, ch){
 	//console.log(parent);
 	return parent.appendChild(ch);
 }
-/*
+
+/**
  * Sleeps
  * https://stackoverflow.com/questions/s951021/what-is-the-javascript-version-of-sleep
  */
@@ -112,15 +116,50 @@ export function sleep(ms) {
 export function boldStatement(getString){
 	return '<b>'+getString+'</b>';
 }
+
 /**
  *
  */
 export function greenText(getEle) {
 	getEle.style.color='#1ec503';
 }
+
+/**
+ * Takes an element, error message and id
+ * then displays the error message with the id below the element.
+ */
+function showErrorAfter(btn, msg, id) {
+	if(document.getElementById(id) == null ){
+		var error = createElement('p', null, {id:id, style:'color:red'});
+		error.innerHTML = msg;
+		btn.after(error);
+	}
+}
+
+/**
+ * fetch function returns a Promise
+ * on resolution returns boolean on if user exists
+ */
+function checkUser(uName) {
+	return fetch('http://localhost:8080/data/users.json')
+	.then(function(resp) {
+		return resp.json();
+	})
+	.then(function(users) {
+		//console.log(JSON.stringify(myJson));
+		for(var i = 0; i < users.length; i++){
+			if (users[i]['username'] == uName){
+				return true;
+			}
+		}
+		return false;
+	});
+}
+
 /***********************************************************
 Login
 ***********************************************************/
+
 /**
  *	Takes an element where login needs to be setup with div options
  *
@@ -160,8 +199,7 @@ export function addLogin(parentElement, options){
 	checkUnamePass(parentElement);
 }
 
-
-/*
+/**
  * Extracts username password from loginDiv Element and verifies user credentials
  *https://stackoverflow.com/questions/29311918/how-do-i-capture-data-entered-into-the-field-of-an-html-form
  */
@@ -171,15 +209,11 @@ function checkUnamePass(parentElement){
 	var username = document.getElementsByName('uname');
 	var password = document.getElementsByName('pswd');
 	submitbtn.addEventListener('click', async function(){
-		if (document.getElementById('incorrect-uPass') != null ){
-			//https://stackoverflow.com/questions/3387427/remove-element-by-id
-			document.getElementById('incorrect-uPass').remove();
-		}
 		var uname = username[0].value;
 		var pswd = password[0].value;
 
-		if (uname == null || uname == '' || pswd == null || pswd == '') {
-			loginError(document.getElementById('loginPassword'));
+		if (uname == null || uname === '' || pswd == null || pswd === '') {
+			showErrorAfter(document.getElementById('loginPassword'), 'Username or Password Field Empty.', 'emptyLoginField');
 		} else {
 			//console.log(uname);
 			//console.log(pswd);
@@ -190,13 +224,13 @@ function checkUnamePass(parentElement){
 			if( result == true ){
 				loggedIn(parentElement);
 			} else {
-				loginError(document.getElementById('loginPassword'));
+				showErrorAfter(document.getElementById('loginPassword'), 'Username or Password Incorrect. Please Try Again!', 'incorrectUnamePass');
 			}
 		}
 	});
 }
 
-/*
+/**
  *	Takes a object with user input username and password
  *	checks with local users.json file
  *	If match is found true is returned or else false is returned
@@ -204,8 +238,8 @@ function checkUnamePass(parentElement){
 function checkCredentials(credential){
 	//https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
 	return fetch('http://localhost:8080/data/users.json')
-	.then(function(response) {
-		return response.json();
+	.then(function(resp) {
+		return resp.json();
 	})
 	.then(function(users) {
 		//console.log(JSON.stringify(myJson));
@@ -219,20 +253,7 @@ function checkCredentials(credential){
 	});
 }
 
-/*
- * Takes a btn element and adds a login error above it
- *
- */
-function loginError(btn){
-	if(document.getElementById('incorrect-uPass') == null ){
-		var error = createElement('p', null, {id:'incorrect-uPass',style:'color:red'});
-		error.innerHTML = 'Incorrect Username or Password. Please Try Again.';
-		btn.after(error);
-	}
-}
-
-/*
- *
+/**
  *	Removes the loginDiv and adds user page
  */
 function loggedIn(parentElement){
@@ -241,13 +262,22 @@ function loggedIn(parentElement){
 	work.innerHTML = 'This page is under construction. c0me back later!';
 	document.getElementById('frontpageUnamePass').remove();
 	appendElement(parentElement, work);
+	feed(parentElement);
 }
 
-
 /***********************************************************
-Registration
+Registration Form
 ***********************************************************/
 
+/**
+ * Takes a element and options
+ * If regBtn is found then it's visibility is changed to inline
+ * If regBtn is not found it is created and returned
+ * An EventListener is created for listening to clicks on regBtn
+ * If regBtn is clicked loginDiv is removed and formDiv is added to the element
+ * populateRegistrationForm funtion is called and form elements are added to formDiv
+ * submitRegistrationForm function is called to listen to form submission
+ */
 export function addRegistration(parentElement, options){
 	var regBtn = parentElement.querySelector('#registrationBtn');
 	var submitBtn = parentElement.querySelector('#submitBtn');
@@ -259,7 +289,8 @@ export function addRegistration(parentElement, options){
 		submitBtn.style.display = 'inline';
 		//console.log(regBtn);
 	} else {
-		//creates a registration button  and returns it if loginDiv is not found
+		// XXX creates a registration button  and returns it if loginDiv is not found
+		return;
 	}
 
 	regBtn.addEventListener('click', function(){
@@ -270,32 +301,90 @@ export function addRegistration(parentElement, options){
 		var formDiv = createElement('div', null, options);
 		populateRegistrationForm(formDiv);
 		appendElement(parentElement, formDiv);
-
+		submitRegistrationForm(parentElement);
 	});
 }
 
-
+/**
+ * creates fields to take in new user information
+ * and submit form button is created
+ */
 function populateRegistrationForm(formDiv){
 
 	var slaveName = createElement('label', null, {for:'slaveName'});
 	slaveName.innerHTML=boldStatement('Official Name');
 	greenText(slaveName);
-	var slaveNamePlaceHolderText = createElement('input', null, {id: 'newUsername', type: 'text', placeholder:'Your slave name', name: 'slaveName', require:true});
+	var slaveNamePlaceHolderText = createElement('input', null, {id: 'slaveName', type: 'text', placeholder:'Your slave name', name: 'slaveName', require:true});
 	appendElement(formDiv, slaveName);
 	appendElement(formDiv, slaveNamePlaceHolderText);
 
-	var uname = createElement('label', null, {for:'uname'});
+	var uname = createElement('label', null, {for:'newUname'});
 	uname.innerHTML=boldStatement('Username');
 	greenText(uname);
-	var unamePlaceHolderText = createElement('input', null, {id: 'newUsername', type: 'text', placeholder:'Hence Forth You Shall Be Beckoned As', name: 'uname', require:true});
+	var unamePlaceHolderText = createElement('input', null, {id: 'newUsername', type: 'text', placeholder:'Hence Forth You Shall Be Beckoned As', name: 'newUname', require:true});
 	appendElement(formDiv, uname);
 	appendElement(formDiv, unamePlaceHolderText);
+
 	// XXX implement realtime username check
 
 	/*
 	 * Add password here.
 	 */
+
 	var submitRegBtn = createElement('button', null, {id:'submitRegBtn', type:'submit'});
 	submitRegBtn.innerHTML='Submit';
 	appendElement(formDiv, submitRegBtn);
+}
+
+/**
+ * EventListener listening to clicking of submit form button
+ * the form details are collected and a validation is carried out
+ */
+function submitRegistrationForm(parentElement){
+	var submitRegBtn = parentElement.querySelector('#submitRegBtn');
+	submitRegBtn.addEventListener('click',async function(){
+		var slaveName = document.getElementsByName('slaveName')[0].value;
+		var newUname = document.getElementsByName('newUname')[0].value;
+		//console.log(slaveName);
+		//console.log(newUname);
+		if (slaveName == null || slaveName === '' || newUname == null || newUname === '') {
+			showErrorAfter(document.getElementById('newUsername'), "Username or Password Field Empty.", 'emptyFormField');
+		} else {
+			//check for duplicate username
+			if (await checkUser(newUname)){
+				showErrorAfter(document.getElementById('newUsername'), "Username already Exists.", 'userNameExists');
+			} else {
+				//Create new user object for json file
+				console.log("Success");
+			}
+		}
+	});
+}
+
+/***********************************************************
+Feed Interface
+***********************************************************/
+
+/**
+ *
+ *
+ */
+async function feed(parentElement){
+	var mainDiv = createElement('div', null,{id:'mainFeed', style:'border:1px solid'});
+	mainDiv.style.backgroundColor = 'black';
+	const url = 'http://localhost:8080/data/feed.json';
+	var jsonData = await getData(url);
+	for(var i = 0; i < jsonData.length; i++){
+		let item = createPostTile(jsonData[i]);
+		appendElement(mainDiv, item);
+	}
+	appendElement(parentElement, mainDiv);
+}
+
+
+function getData(url){
+	return fetch('http://localhost:8080/data/feed.json')
+	.then(function(resp){
+		return resp.json();
+	});
 }

@@ -103,6 +103,11 @@ button:hover {
     opacity: 0.8;
 }
 
+h2{
+    padding: 0px;
+    margin: 0px;
+}
+
 @media screen and (max-width: 500px) {
     .post {
         border: none;
