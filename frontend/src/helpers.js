@@ -129,6 +129,7 @@ export function addLogin(parentElement, options){
 
 	var loginDiv = createElement('div', null, options);
 
+	//Create input field for username and add it to loginDiv
 	var uname = createElement('label', null, {for:'uname'});
 	uname.innerHTML=boldStatement('Username');
 	greenText(uname);
@@ -136,6 +137,7 @@ export function addLogin(parentElement, options){
 	appendElement(loginDiv, uname);
 	appendElement(loginDiv, unamePlaceHolderText);
 
+	//Create input field for password and add it to loginDiv
 	var upass = createElement('label', null, {for:'pswd'});
 	upass.innerHTML=boldStatement('Password');
 	greenText(upass);
@@ -144,10 +146,12 @@ export function addLogin(parentElement, options){
 	appendElement(loginDiv, upassPlaceHolderText);
 
 	//https://www.w3schools.com/jsref/prop_style_visibility.asp
+	//Registration button is created but in a hiddent mode, to unhide call addRegistration
 	var regBtn = createElement('button', null, {id:'registrationBtn', type:'submit', style:'display:none;'});
 	regBtn.innerHTML='Register';
 	appendElement(loginDiv, regBtn);
 
+	//Login button
 	var loginBtn = createElement('button', null, {id:'submitBtn', type:'submit'});
 	loginBtn.innerHTML='Login';
 	appendElement(loginDiv, loginBtn);
@@ -247,19 +251,51 @@ Registration
 export function addRegistration(parentElement, options){
 	var regBtn = parentElement.querySelector('#registrationBtn');
 	var submitBtn = parentElement.querySelector('#submitBtn');
+	//Checks for a loginDiv
 	if( regBtn != null ){
 		//https://www.w3schools.com/jsref/prop_style_display.asp
+		//Unhides registration button if loginDiv is found
 		regBtn.style.display = 'inline';
 		submitBtn.style.display = 'inline';
 		//console.log(regBtn);
 	} else {
-		//create a registration button and return
+		//creates a registration button  and returns it if loginDiv is not found
 	}
 
 	regBtn.addEventListener('click', function(){
-		var regPage = createElement('h1', null, {id:'registrationPage',style:'color:#1ec503'});
-		regPage.innerHTML = 'Register';
+		var regPageHeader = createElement('h1', null, {id:'registrationPage',style:'color:#1ec503'});
+		regPageHeader.innerHTML = 'Register';
 		document.getElementById('frontpageUnamePass').remove();
-		appendElement(parentElement, regPage);
+		appendElement(parentElement, regPageHeader);
+		var formDiv = createElement('div', null, options);
+		populateRegistrationForm(formDiv);
+		appendElement(parentElement, formDiv);
+
 	});
+}
+
+
+function populateRegistrationForm(formDiv){
+
+	var slaveName = createElement('label', null, {for:'slaveName'});
+	slaveName.innerHTML=boldStatement('Official Name');
+	greenText(slaveName);
+	var slaveNamePlaceHolderText = createElement('input', null, {id: 'newUsername', type: 'text', placeholder:'Your slave name', name: 'slaveName', require:true});
+	appendElement(formDiv, slaveName);
+	appendElement(formDiv, slaveNamePlaceHolderText);
+
+	var uname = createElement('label', null, {for:'uname'});
+	uname.innerHTML=boldStatement('Username');
+	greenText(uname);
+	var unamePlaceHolderText = createElement('input', null, {id: 'newUsername', type: 'text', placeholder:'Hence Forth You Shall Be Beckoned As', name: 'uname', require:true});
+	appendElement(formDiv, uname);
+	appendElement(formDiv, unamePlaceHolderText);
+	// XXX implement realtime username check
+
+	/*
+	 * Add password here.
+	 */
+	var submitRegBtn = createElement('button', null, {id:'submitRegBtn', type:'submit'});
+	submitRegBtn.innerHTML='Submit';
+	appendElement(formDiv, submitRegBtn);
 }

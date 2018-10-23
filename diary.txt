@@ -1,4 +1,5 @@
 12/10/18	   20:45	 22:00	 Understanding the Spec
 22/10/18    10:00  22:00	 Subset 0 Login
 22/10/18		10:30  14:40	 Subset 0 Login, Testing
-22/10/18    15:00	 			 Subset 0 Registration               
+22/10/18    15:00	 15:30	 Subset 0 Registration
+22/10/18    16:30	 18:00	 Subset 0 Registration                    
