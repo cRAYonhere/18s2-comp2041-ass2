@@ -1,7 +1,7 @@
 // change this when you integrate with the real API, or when u start using the dev server
 const API_URL = 'http://localhost:8080/data'
 
-const getJSON = (path, options) => 
+const getJSON = (path, options) =>
     fetch(path, options)
         .then(res => res.json())
         .catch(err => console.warn(`API_ERROR: ${err.message}`));
@@ -14,11 +14,11 @@ export default class API {
 
     /**
      * Defaults to teh API URL
-     * @param {string} url 
+     * @param {string} url
      */
     constructor(url = API_URL) {
         this.url = url;
-    } 
+    }
 
     makeAPIRequest(path) {
         return getJSON(`${this.url}/${path}`);

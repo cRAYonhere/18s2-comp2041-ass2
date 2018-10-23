@@ -72,11 +72,41 @@ footer {
     height: 640px;
 }
 
+/* inputs
+https://www.w3schools.com/howto/howto_css_login_form.asp
+*/
+input[type=text], input[type=password] {
+    width: 30%;
+    padding: 10px 50px;
+    margin: 10px 0px;
+    display: block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* Set a style for all button
+https://www.w3schools.com/howto/howto_css_login_form.asp
+*/
+button {
+    background-color: #1ec503;
+    color: white;
+    padding: 10px 0px;
+    margin: 20px 60px;
+    border: none;
+    cursor: pointer;
+    width: 15%;
+}
+
+/* Add a hover effect for buttons */
+button:hover {
+    opacity: 0.8;
+}
+
 @media screen and (max-width: 500px) {
     .post {
         border: none;
         border-bottom: 1px solid rgba(0,0,0,.0975);
-        border-top: 1px solid rgba(0,0,0,.0975); 
+        border-top: 1px solid rgba(0,0,0,.0975);
         max-height: 60vh;
     }
 
