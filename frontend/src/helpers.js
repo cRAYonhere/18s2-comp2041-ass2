@@ -86,11 +86,9 @@ export function checkStore(key) {
 }
 
 /*
-
 /***********************************************************
-Login
+General Functions
 ***********************************************************/
-
 /**
  *	takes a parent element and a child element
  *	and then returns the parent with child element added to its body
@@ -120,33 +118,42 @@ export function boldStatement(getString){
 export function greenText(getEle) {
 	getEle.style.color='#1ec503';
 }
+/***********************************************************
+Login
+***********************************************************/
 /**
  *	Takes an element where login needs to be setup with div options
  *
  */
-export function loginDiv(parentElement, options){
+export function addLogin(parentElement, options){
 
 	var loginDiv = createElement('div', null, options);
 
 	var uname = createElement('label', null, {for:'uname'});
 	uname.innerHTML=boldStatement('Username');
 	greenText(uname);
-	var unamePlaceHolderText = createElement('input', null, {type: 'text', placeholder:'Enter Username', name: 'uname', require:true});
+	var unamePlaceHolderText = createElement('input', null, {id: 'loginUsername', type: 'text', placeholder:'Enter Username', name: 'uname', require:true});
 	appendElement(loginDiv, uname);
 	appendElement(loginDiv, unamePlaceHolderText);
 
 	var upass = createElement('label', null, {for:'pswd'});
 	upass.innerHTML=boldStatement('Password');
 	greenText(upass);
-	var upassPlaceHolderText = createElement('input', null, {type: 'password', placeholder:'Enter Password', name: 'pswd', require:true});
+	var upassPlaceHolderText = createElement('input', null, {id: 'loginPassword', type: 'password', placeholder:'Enter Password', name: 'pswd', require:true});
 	appendElement(loginDiv, upass);
 	appendElement(loginDiv, upassPlaceHolderText);
 
-	var loginBtn = createElement('button', null, {type:'submit'});
+	//https://www.w3schools.com/jsref/prop_style_visibility.asp
+	var regBtn = createElement('button', null, {id:'registrationBtn', type:'submit', style:'display:none;'});
+	regBtn.innerHTML='Register';
+	appendElement(loginDiv, regBtn);
+
+	var loginBtn = createElement('button', null, {id:'submitBtn', type:'submit'});
 	loginBtn.innerHTML='Login';
 	appendElement(loginDiv, loginBtn);
+
 	appendElement(parentElement, loginDiv);
-	checkUnamePass(parentElement, loginDiv);
+	checkUnamePass(parentElement);
 }
 
 
@@ -154,12 +161,12 @@ export function loginDiv(parentElement, options){
  * Extracts username password from loginDiv Element and verifies user credentials
  *https://stackoverflow.com/questions/29311918/how-do-i-capture-data-entered-into-the-field-of-an-html-form
  */
-function checkUnamePass(parentElement,ele){
-	var btn = ele.getElementsByTagName('button');
-	//console.log(ele);
+function checkUnamePass(parentElement){
+	var submitbtn = document.getElementById('submitBtn');
+	//console.log(submitbtn);
 	var username = document.getElementsByName('uname');
 	var password = document.getElementsByName('pswd');
-	btn[0].addEventListener('click', async function(){
+	submitbtn.addEventListener('click', async function(){
 		if (document.getElementById('incorrect-uPass') != null ){
 			//https://stackoverflow.com/questions/3387427/remove-element-by-id
 			document.getElementById('incorrect-uPass').remove();
@@ -168,7 +175,7 @@ function checkUnamePass(parentElement,ele){
 		var pswd = password[0].value;
 
 		if (uname == null || uname == '' || pswd == null || pswd == '') {
-			loginError(btn[0]);
+			loginError(document.getElementById('loginPassword'));
 		} else {
 			//console.log(uname);
 			//console.log(pswd);
@@ -179,13 +186,11 @@ function checkUnamePass(parentElement,ele){
 			if( result == true ){
 				loggedIn(parentElement);
 			} else {
-				loginError(btn[0]);
+				loginError(document.getElementById('loginPassword'));
 			}
 		}
 	});
 }
-
-
 
 /*
  *	Takes a object with user input username and password
@@ -218,7 +223,7 @@ function loginError(btn){
 	if(document.getElementById('incorrect-uPass') == null ){
 		var error = createElement('p', null, {id:'incorrect-uPass',style:'color:red'});
 		error.innerHTML = 'Incorrect Username or Password. Please Try Again.';
-		btn.before(error);
+		btn.after(error);
 	}
 }
 
@@ -238,3 +243,23 @@ function loggedIn(parentElement){
 /***********************************************************
 Registration
 ***********************************************************/
+
+export function addRegistration(parentElement, options){
+	var regBtn = parentElement.querySelector('#registrationBtn');
+	var submitBtn = parentElement.querySelector('#submitBtn');
+	if( regBtn != null ){
+		//https://www.w3schools.com/jsref/prop_style_display.asp
+		regBtn.style.display = 'inline';
+		submitBtn.style.display = 'inline';
+		//console.log(regBtn);
+	} else {
+		//create a registration button and return
+	}
+
+	regBtn.addEventListener('click', function(){
+		var regPage = createElement('h1', null, {id:'registrationPage',style:'color:#1ec503'});
+		regPage.innerHTML = 'Register';
+		document.getElementById('frontpageUnamePass').remove();
+		appendElement(parentElement, regPage);
+	});
+}

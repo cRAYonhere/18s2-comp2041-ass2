@@ -77,11 +77,12 @@ https://www.w3schools.com/howto/howto_css_login_form.asp
 */
 input[type=text], input[type=password] {
     width: 30%;
-    padding: 10px 50px;
-    margin: 10px 0px;
+    padding: 10px 10px;
+    margin: 10px 20px;
     display: block;
     border: 1px solid #ccc;
     box-sizing: border-box;
+	align-items: center;
 }
 
 /* Set a style for all button
@@ -91,7 +92,7 @@ button {
     background-color: #1ec503;
     color: white;
     padding: 10px 0px;
-    margin: 20px 60px;
+    margin: 12px 10px;
     border: none;
     cursor: pointer;
     width: 15%;

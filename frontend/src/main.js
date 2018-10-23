@@ -21,8 +21,8 @@ h1Elements[0].style.color='#1ec503';
 
 var mainRole = document.querySelector('main');
 
-helper.loginDiv(mainRole, {class:'loginContainer', id:'frontpageUnamePass'});
-
+helper.addLogin(mainRole, {class:'loginContainer', id:'frontpageUnamePass'});
+helper.addRegistration(mainRole, null);
 
 /*
 feed
