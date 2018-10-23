@@ -112,13 +112,13 @@ export function sleep(ms) {
  * returns the string with HTML tag for BOLD
  */
 export function boldStatement(getString){
-	return "<b>"+getString+"</b>";
+	return '<b>'+getString+'</b>';
 }
 /**
  *
  */
 export function greenText(getEle) {
- 	getEle.style.color="#1ec503";
+	getEle.style.color='#1ec503';
 }
 /**
  *	Takes an element where login needs to be setup with div options
@@ -128,22 +128,22 @@ export function loginDiv(parentElement, options){
 
 	var loginDiv = createElement('div', null, options);
 
-	var uname = createElement('label', null, {for:"uname"});
-	uname.innerHTML=boldStatement("Username");
+	var uname = createElement('label', null, {for:'uname'});
+	uname.innerHTML=boldStatement('Username');
 	greenText(uname);
-	var unamePlaceHolderText = createElement('input', null, {type: "text", placeholder:"Enter Username", name: "uname", require:true});
+	var unamePlaceHolderText = createElement('input', null, {type: 'text', placeholder:'Enter Username', name: 'uname', require:true});
 	appendElement(loginDiv, uname);
 	appendElement(loginDiv, unamePlaceHolderText);
 
-	var upass = createElement('label', null, {for:"pswd"});
-	upass.innerHTML=boldStatement("Password");
+	var upass = createElement('label', null, {for:'pswd'});
+	upass.innerHTML=boldStatement('Password');
 	greenText(upass);
-	var upassPlaceHolderText = createElement('input', null, {type: "password", placeholder:"Enter Password", name: "pswd", require:true});
+	var upassPlaceHolderText = createElement('input', null, {type: 'password', placeholder:'Enter Password', name: 'pswd', require:true});
 	appendElement(loginDiv, upass);
 	appendElement(loginDiv, upassPlaceHolderText);
 
 	var loginBtn = createElement('button', null, {type:'submit'});
-	loginBtn.innerHTML="Login";
+	loginBtn.innerHTML='Login';
 	appendElement(loginDiv, loginBtn);
 	appendElement(parentElement, loginDiv);
 	checkUnamePass(parentElement, loginDiv);
@@ -155,10 +155,10 @@ export function loginDiv(parentElement, options){
  *https://stackoverflow.com/questions/29311918/how-do-i-capture-data-entered-into-the-field-of-an-html-form
  */
 function checkUnamePass(parentElement,ele){
-	var btn = ele.getElementsByTagName("button");
+	var btn = ele.getElementsByTagName('button');
 	//console.log(ele);
-	var username = document.getElementsByName("uname");
-	var password = document.getElementsByName("pswd");
+	var username = document.getElementsByName('uname');
+	var password = document.getElementsByName('pswd');
 	btn[0].addEventListener('click', async function(){
 		if (document.getElementById('incorrect-uPass') != null ){
 			//https://stackoverflow.com/questions/3387427/remove-element-by-id
@@ -167,7 +167,7 @@ function checkUnamePass(parentElement,ele){
 		var uname = username[0].value;
 		var pswd = password[0].value;
 
-		if (uname == null || uname == "" || pswd == null || pswd == "") {
+		if (uname == null || uname == '' || pswd == null || pswd == '') {
 			loginError(btn[0]);
 		} else {
 			//console.log(uname);
@@ -195,19 +195,19 @@ function checkUnamePass(parentElement,ele){
 function checkCredentials(credential){
 	//https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
 	return fetch('http://localhost:8080/data/users.json')
-	  .then(function(response) {
-	    return response.json();
-	  })
-	  .then(function(users) {
-	    //console.log(JSON.stringify(myJson));
+	.then(function(response) {
+		return response.json();
+	})
+	.then(function(users) {
+		//console.log(JSON.stringify(myJson));
 		for(var i = 0; i < users.length; i++){
-			//console.log(users[i]["username"]+" == " +credential.username +" | " +users[i]["name"]+" == " +credential.password)
-			if (users[i]["username"] == credential.username && users[i]["name"] == credential.password){
+			//console.log(users[i]['username']+' == ' +credential.username +' | ' +users[i]['name']+' == ' +credential.password)
+			if (users[i]['username'] == credential.username && users[i]['name'] == credential.password){
 				return true;
 			}
 		}
 		return false;
-	  });
+	});
 }
 
 /*
@@ -217,7 +217,7 @@ function checkCredentials(credential){
 function loginError(btn){
 	if(document.getElementById('incorrect-uPass') == null ){
 		var error = createElement('p', null, {id:'incorrect-uPass',style:'color:red'});
-		error.innerHTML = "Incorrect Username or Password. Please Try Again.";
+		error.innerHTML = 'Incorrect Username or Password. Please Try Again.';
 		btn.before(error);
 	}
 }
@@ -227,9 +227,9 @@ function loginError(btn){
  *	Removes the loginDiv and adds user page
  */
 function loggedIn(parentElement){
-	//console.log("Logged IN");
+	//console.log('Logged IN');
 	var work = createElement('p', null, {id:'workInProgress',style:'color:red'});
-	work.innerHTML = "This page is under construction. c0me back later!";
+	work.innerHTML = 'This page is under construction. c0me back later!';
 	document.getElementById('frontpageUnamePass').remove();
 	appendElement(parentElement, work);
 }

@@ -2,9 +2,9 @@
 import * as helper from './helpers.js';
 
 // when importing 'default' exports, use below syntax
-import API from './api.js';
+//import API from './api.js';
 
-const api  = new API();
+//const api  = new API();
 
 document.body.style.backgroundColor = 'black';
 
@@ -17,7 +17,7 @@ h1Elements[0].style.color='#1ec503';
 
 
 // we can use this single api request multiple times
-const feed = api.getFeed();
+//const feed = api.getFeed();
 
 var mainRole = document.querySelector('main');
 
