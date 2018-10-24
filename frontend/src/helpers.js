@@ -36,14 +36,14 @@ export function createElement(tag, data, options = {}) {
  */
 export function createPostTile(post) {
     const section = createElement('section', null, { class: 'post'});
-	section.style.backgroundColor = 'black';
-    section.appendChild(createElement('h2', post.meta.author, { id:post.id+'-post-title', class: 'post-title', style:'color: rgb(30, 197, 3);'}));
-	section.appendChild(createElement('p', post.meta.published.substring(0, 24), { id:post.id+'-post-published', class: 'post-published', style:'color: rgb(30, 197, 3);'}));
+    section.appendChild(createElement('h2', post.meta.author, { id:post.id+'-post-title', class: 'post-title'}));
+	section.appendChild(createElement('p', post.meta.published.substring(0, 24), { id:post.id+'-post-published', class: 'post-published'}));
 	//https://stackoverflow.com/questions/1347675/html-img-scaling
     section.appendChild(createElement('img', null,
-        { id:post.id+'-post-image', src: '/images/'+post.src, alt: post.meta.description_text, class: 'post-image', style:'width:70%;height:70%;'}));
-	section.appendChild(createElement('p', '(y) '+post.meta.likes.length, { id:post.id+'-post-likes', class: 'post-likes', style:'color: rgb(30, 197, 3);display: inline;'}));
-	section.appendChild(createElement('p', '(c) '+post.meta.comments.length, { id:post.id+'-post-comments', class: 'post-comments', style:'color: rgb(30, 197, 3); display: inline;'}));
+        { id:post.id+'-post-image', src: '/images/'+post.src, alt: post.meta.description_text, class: 'post-image'}));
+	section.appendChild(createElement('p', post.meta.description_text, { id:post.id+'-post-description_text', class: 'post-description_text'}));
+	section.appendChild(createElement('span', '(y) '+post.meta.likes.length, { id:post.id+'-post-likes', class: 'post-likes'}));
+	section.appendChild(createElement('span', '(c) '+post.meta.comments.length, { id:post.id+'-post-comments', class: 'post-comments'}));
 	return section;
 }
 
@@ -156,6 +156,16 @@ function checkUser(uName) {
 	});
 }
 
+/**
+ *	asyncronous fetch of url
+ *	Takes a url and return data is json format
+ */
+function getData(url){
+	return fetch(url)
+	.then(function(resp){
+		return resp.json();
+	});
+}
 /***********************************************************
 Login
 ***********************************************************/
@@ -258,10 +268,9 @@ function checkCredentials(credential){
  */
 function loggedIn(parentElement){
 	//console.log('Logged IN');
-	var work = createElement('p', null, {id:'workInProgress',style:'color:red'});
-	work.innerHTML = 'This page is under construction. c0me back later!';
+
+	//removes the loginDiv
 	document.getElementById('frontpageUnamePass').remove();
-	appendElement(parentElement, work);
 	feed(parentElement);
 }
 
@@ -367,13 +376,18 @@ Feed Interface
 
 /**
  *
- *
+ *	Creates a div and populates it with posts from fetch
+ * 	adds the div to the parent element
  */
 async function feed(parentElement){
 	var mainDiv = createElement('div', null,{id:'mainFeed', style:'border:1px solid'});
 	mainDiv.style.backgroundColor = 'black';
 	const url = 'http://localhost:8080/data/feed.json';
 	var jsonData = await getData(url);
+
+	sortDatePublished(jsonData);
+	//console.log(jsonData);
+
 	for(var i = 0; i < jsonData.length; i++){
 		let item = createPostTile(jsonData[i]);
 		appendElement(mainDiv, item);
@@ -381,10 +395,23 @@ async function feed(parentElement){
 	appendElement(parentElement, mainDiv);
 }
 
+/**
+ *	sorts the array of objects by date
+ *
+ */
+function sortDatePublished(jsonData){
+	//https://stackoverflow.com/questions/41034716/sort-json-data-based-on-date-and-time
+	jsonData.sort(function(a,b){
+		var months = [["Jan",1],["Feb",2],["Mar",3],["Apr",4],["May",5],["Jun",6],["Jul",7],["Aug",8],["Sep",9],["Oct",10],["Nov",11],["Dec",12]];
+		var month = new Map(months);
 
-function getData(url){
-	return fetch('http://localhost:8080/data/feed.json')
-	.then(function(resp){
-		return resp.json();
+		var ele1 = a.meta.published.split(" ");
+		var ele2 = b.meta.published.split(" ");
+		var gmt1 = ele1[5].split("+");
+		var gmt2 = ele1[5].split("+");
+		var date1 = ele1[3]+"-"+month.get(ele1[1])+"-"+ele1[2]+"T"+ele1[4]+"+"+gmt1[1].substring(0, 2)+":"+gmt1[1].substring(2, 4);
+		var date2 = ele2[3]+"-"+month.get(ele2[1])+"-"+ele2[2]+"T"+ele2[4]+"+"+gmt2[1].substring(0, 2)+":"+gmt2[1].substring(2, 4);
+
+		return date2.localeCompare(date1);
 	});
 }
