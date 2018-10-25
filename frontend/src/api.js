@@ -7,6 +7,7 @@ const getJSON = (path, options) =>
         .catch(err => console.warn(`API_ERROR: ${err.message}`));
 
 var TOKEN;
+var USER_ID;
 /**
  * This is a sample class API which you may base your code on.
  * You don't have to do this as a class.
@@ -24,6 +25,27 @@ export default class API {
     makeAPIRequest(path) {
         return getJSON(`${this.url}/${path}`);
     }
+
+	/**
+	 *	using an internal token returns user data
+	 */
+	getApiUser(){
+		return fetch(`${API_URL}/user`, {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+				'Authorization': 'Token '+ TOKEN
+			} })
+			.then(async function(resp) {
+				if(resp.status === 200){
+					var userData = await resp.json();
+					USER_ID = userData.id;
+					return userData;
+				} else {
+					throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token | 404: Post Not Found.';
+				}
+			});
+	}
 
     /**
      * @returns feed array in json format
@@ -43,7 +65,7 @@ export default class API {
     /**
      * @returns auth'd user in json format
      */
-    getMe(authObject) {
+    postLogin(authObject) {
 		return fetch(`${API_URL}/auth/login`, {
 			method: 'POST',
 			body: JSON.stringify(authObject),
@@ -64,9 +86,9 @@ export default class API {
     }
 
 	/**
-	 *
+	 *	takes a registration object with details and returns status
 	 */
-	getSignUp(registrationObject) {
+	postRegistration(registrationObject) {
 		return fetch(`${API_URL}/auth/signup`, {
 			method: 'POST',
 			body: JSON.stringify(registrationObject),
@@ -76,9 +98,70 @@ export default class API {
 			.then(async function(resp) {
 				var tokenObject = await resp.json();
 				if(resp.status === 200){
-				TOKEN = tokenObject.token;
-			}
+					TOKEN = tokenObject.token;
+				} else if (resp.status === 400){
+					throw resp.status+ ' 400: Malformed Request | 409: Username Taken';
+				}
 			return resp.status;
 			});
-		}
 	}
+
+	/**
+	 * takes an id and add like to the id and returns status
+	 */
+	putLike(id){
+		return fetch(`${API_URL}/post/like?id=${id}`, {
+			method: 'PUT',
+			headers: {
+				'accept': 'application/json',
+				'Authorization': 'Token '+TOKEN
+			} })
+			.then(function(resp) {
+				if(resp.status === 200){
+					return resp.status;
+				} else {
+					throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token | 404: Post Not Found.';
+				}
+			});
+	}
+
+	/**
+	 * takes an id and add removes the like on the id and returns status
+	 */
+	putUnLike(id){
+		return fetch(`${API_URL}/post/unlike?id=${id}`, {
+			method: 'PUT',
+			headers: {
+				'accept': 'application/json',
+				'Authorization': 'Token '+TOKEN
+			} })
+			.then(function(resp) {
+				if(resp.status === 200){
+					return resp.status;
+				} else {
+					throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token | 404: Post Not Found.';
+				}
+			});
+	}
+
+	/**
+	 * takes an id and returns the posts associated with it
+	 */
+	getPost(id) {
+		return fetch(`${API_URL}/post/?id=${id}`, {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+				'Authorization': 'Token '+TOKEN
+			} })
+			.then(function(resp) {
+				if(resp.status === 200){
+					return resp.json();
+				} else {
+					throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token | 404: Post Not Found.';
+				}
+			});
+	}
+
+
+}

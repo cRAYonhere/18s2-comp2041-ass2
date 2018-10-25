@@ -1,3 +1,5 @@
+
+var USER_DATA;
 /* returns an empty array of size max */
 export const range = (max) => Array(max).fill(null);
 
@@ -46,8 +48,8 @@ export function createPostTile(post) {
     section.appendChild(createElement('img', null,
         { id:post.id+'-post-image', src: 'data:image/png;base64,'+post.src, alt: post.meta.description_text, class: 'post-image'}));
 	section.appendChild(createElement('p', post.meta.description_text, { id:post.id+'-post-description_text', class: 'post-description_text'}));
-	section.appendChild(createElement('span', '(y) '+post.meta.likes.length, { id:post.id+'-post-likes', class: 'post-likes'}));
-	section.appendChild(createElement('span', '(c) '+post.comments.length, { id:post.id+'-post-comments', class: 'post-comments'}));
+	section.appendChild(createElement('span', '(y) '+post.meta.likes.length, { id:post.id+'-post-like', class: 'post-likes'}));
+	section.appendChild(createElement('span', '(c) '+post.comments.length, { id:post.id+'-post-comment', class: 'post-comments'}));
 	return section;
 }
 
@@ -132,13 +134,13 @@ export function greenText(getEle) {
  * Takes an element, error message and id
  * then displays the error message with the id below the element.
  */
-function showErrorAfter(btn, msg, id) {
+function showErrorAfter(ele, msg, id) {
 	if(document.getElementById(id) != null ){
 		document.getElementById(id).remove();
 	}
 	var error = createElement('p', null, {id:id, style:'color:red'});
 	error.innerHTML = msg;
-	btn.after(error);
+	ele.after(error);
 }
 
 /**
@@ -231,7 +233,7 @@ function checkUnamePass(api, parentElement){
  */
 function checkCredentials(api, credential){
 	//https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
-	return api.getMe({
+	return api.postLogin({
 		'username': credential.username,
 		'password': credential.password
 	})
@@ -381,7 +383,7 @@ async function submitRegistrationForm(api, parentElement){
 					'email': uEmailAddress,
 					'name': slaveName
 				}
-				var statusNb = await api.getSignUp(registrationObject);
+				var statusNb = await api.postRegistration(registrationObject);
 				if(statusNb === 200){
 					//console.log(statusNb);
 					feed(api, parentElement);
@@ -390,7 +392,7 @@ async function submitRegistrationForm(api, parentElement){
 				} else if (statusNb == 400) {
 					showErrorAfter(document.getElementById('confirmNewUserPassword'), 'I feel broken. Please try again.', 'formFieldError');
 				} else {
-					throw statusNb+': Malformed response from getSignUp()';
+					throw statusNb+': Malformed response from postRegistration()';
 				}
 
 			} else {
@@ -436,6 +438,8 @@ Feed Interface
  * 	adds the div to the parent element
  */
 async function feed(api, parentElement){
+	USER_DATA = await api.getApiUser();
+	//console.log(USER_DATA);
 	var mainDiv = createElement('div', null,{id:'mainFeed', style:'border:1px solid'});
 	mainDiv.style.backgroundColor = 'black';
 	//const url = 'http://localhost:8080/data/feed.json';
@@ -457,9 +461,58 @@ async function feed(api, parentElement){
 	}
 
 	appendElement(parentElement, mainDiv);
-
+	iteractive(api);
 }
 
 /***********************************************************
 Interact
 ***********************************************************/
+/**
+ *
+ *	takes api as an argument and enables
+ *	interactive features like "like", "unlike"
+ */
+function iteractive(api){
+	likePost(api);
+}
+
+/**
+ *	increases like count
+ */
+function likePost(api){
+	//https://stackoverflow.com/questions/19655189/javascript-click-event-listener-on-class
+	var postLikes = document.getElementsByClassName('post-likes');
+	var likeClick = async function() {
+		var attribute = this.getAttribute('id');
+		var postId = attribute.match(/^(\d+).+/)[1];
+		var postData = await api.getPost(postId);
+		var promiseResponse = 0;
+		if (postData.meta.likes.includes(USER_DATA.id) === true){
+			//console.log(USER_DATA.id+" unlike: "+postData.meta.likes);
+			promiseResponse = api.putUnLike(postId);
+		} else {
+			//console.log(USER_DATA.id+" like: "+postData.meta.likes);
+			promiseResponse = api.putLike(postId);
+		}
+		var statusNb = await promiseResponse;
+		//console.log(statusNb);
+		if (statusNb === 200) {
+			var newPostData = await api.getPost(postId);
+			updateLikes(newPostData, attribute);
+		}
+	};
+
+	for (var i = 0; i < postLikes.length; i++) {
+		postLikes[i].addEventListener('click', likeClick, false);
+	}
+}
+
+/**
+ *	updates like count on the dom
+ */
+async function updateLikes(postData, attribute){
+	//console.log(postData);
+	var likeElement = document.getElementById(attribute);
+	//console.log(postData.meta.likes.length);
+	likeElement.innerHTML = '(y) '+postData.meta.likes.length;
+}

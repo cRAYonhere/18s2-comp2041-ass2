@@ -3,7 +3,7 @@
 html, body {
     margin: 0;
     padding: 0;
-    background-color: #1ec503;
+    background-color: black;
     height: 100%;
     font-family: -apple-system, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
@@ -81,11 +81,15 @@ footer {
 	word-wrap: break-word;
 }
 .post-likes {
-	padding: 25px 15px 75px 100px;
+	padding: 5px 5px 5px 5px;
+	position: relative;
+	left: 90px;
 	color: #1ec503;
 }
 .post-comments {
-	padding: 25px 50px 75px 15px;
+	padding: 5px 5px 5px 5px;
+	position: relative;
+    left: 110px;
 	color: #1ec503;
 }
 
