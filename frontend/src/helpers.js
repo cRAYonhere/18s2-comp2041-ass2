@@ -40,10 +40,10 @@ export function createPostTile(post) {
 	section.appendChild(createElement('p', post.meta.published.substring(0, 24), { id:post.id+'-post-published', class: 'post-published'}));
 	//https://stackoverflow.com/questions/1347675/html-img-scaling
     section.appendChild(createElement('img', null,
-        { id:post.id+'-post-image', src: '/images/'+post.src, alt: post.meta.description_text, class: 'post-image'}));
+        { id:post.id+'-post-image', src: 'data:image/png;base64,'+post.src, alt: post.meta.description_text, class: 'post-image'}));
 	section.appendChild(createElement('p', post.meta.description_text, { id:post.id+'-post-description_text', class: 'post-description_text'}));
 	section.appendChild(createElement('span', '(y) '+post.meta.likes.length, { id:post.id+'-post-likes', class: 'post-likes'}));
-	section.appendChild(createElement('span', '(c) '+post.meta.comments.length, { id:post.id+'-post-comments', class: 'post-comments'}));
+	section.appendChild(createElement('span', '(c) '+'0', { id:post.id+'-post-comments', class: 'post-comments'}));
 	return section;
 }
 
@@ -129,11 +129,12 @@ export function greenText(getEle) {
  * then displays the error message with the id below the element.
  */
 function showErrorAfter(btn, msg, id) {
-	if(document.getElementById(id) == null ){
-		var error = createElement('p', null, {id:id, style:'color:red'});
-		error.innerHTML = msg;
-		btn.after(error);
+	if(document.getElementById(id) != null ){
+		document.getElementById(id).remove();
 	}
+	var error = createElement('p', null, {id:id, style:'color:red'});
+	error.innerHTML = msg;
+	btn.after(error);
 }
 
 /**
@@ -166,6 +167,19 @@ function getData(url){
 		return resp.json();
 	});
 }
+
+/**
+ *	Takes a list and returns the first null or empty string encountered
+ *	Otherwise returns true;
+ */
+function checkEmptyString(list){
+	for(var i = 0; i < list.length; i++){
+		if(list[i] === '' || list[i] ==  null) {
+			return i;
+		}
+	}
+	return true;
+}
 /***********************************************************
 Login
 ***********************************************************/
@@ -174,7 +188,7 @@ Login
  *	Takes an element where login needs to be setup with div options
  *
  */
-export function addLogin(parentElement, options){
+export function addLogin(api, parentElement, options){
 
 	var loginDiv = createElement('div', null, options);
 
@@ -206,14 +220,14 @@ export function addLogin(parentElement, options){
 	appendElement(loginDiv, loginBtn);
 
 	appendElement(parentElement, loginDiv);
-	checkUnamePass(parentElement);
+	checkUnamePass(api, parentElement);
 }
 
 /**
  * Extracts username password from loginDiv Element and verifies user credentials
  *https://stackoverflow.com/questions/29311918/how-do-i-capture-data-entered-into-the-field-of-an-html-form
  */
-function checkUnamePass(parentElement){
+function checkUnamePass(api, parentElement){
 	var submitbtn = document.getElementById('submitBtn');
 	//console.log(submitbtn);
 	var username = document.getElementsByName('uname');
@@ -229,12 +243,9 @@ function checkUnamePass(parentElement){
 			//console.log(pswd);
 			var creds = {username:username[0].value, password:password[0].value}
 			//https://javascript.info/async-await
-			let result = await checkCredentials(creds);
-			//console.log(result);
-			if( result == true ){
-				loggedIn(parentElement);
-			} else {
-				showErrorAfter(document.getElementById('loginPassword'), 'Username or Password Incorrect. Please Try Again!', 'incorrectUnamePass');
+			let result = await checkCredentials(api, creds);
+			if (result === true){
+				loggedIn(api, parentElement);
 			}
 		}
 	});
@@ -245,33 +256,37 @@ function checkUnamePass(parentElement){
  *	checks with local users.json file
  *	If match is found true is returned or else false is returned
  */
-function checkCredentials(credential){
+function checkCredentials(api, credential){
 	//https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
-	return fetch('http://localhost:8080/data/users.json')
-	.then(function(resp) {
-		return resp.json();
+	return api.getMe({
+		'username': credential.username,
+		'password': credential.password
 	})
-	.then(function(users) {
-		//console.log(JSON.stringify(myJson));
-		for(var i = 0; i < users.length; i++){
-			//console.log(users[i]['username']+' == ' +credential.username +' | ' +users[i]['name']+' == ' +credential.password)
-			if (users[i]['username'] == credential.username && users[i]['name'] == credential.password){
-				return true;
-			}
+	.then((resp) =>{
+		if (resp === 200) {
+			return true;
+		} else if (resp === 403) {
+			showErrorAfter(document.getElementById('loginPassword'), 'Invalid Username/Password', 'incorrectUnamePass');
+			return false;
+		} else if (resp === 400) {
+			showErrorAfter(document.getElementById('loginPassword'), 'Missing Username/Password', 'incorrectUnamePass');
+			return false;
+		} else {
+			throw resp +" Unknown response code";
 		}
-		return false;
 	});
+
 }
 
 /**
  *	Removes the loginDiv and adds user page
  */
-function loggedIn(parentElement){
+function loggedIn(api, parentElement){
 	//console.log('Logged IN');
 
 	//removes the loginDiv
 	document.getElementById('frontpageUnamePass').remove();
-	feed(parentElement);
+	feed(api, parentElement);
 }
 
 /***********************************************************
@@ -287,7 +302,7 @@ Registration Form
  * populateRegistrationForm funtion is called and form elements are added to formDiv
  * submitRegistrationForm function is called to listen to form submission
  */
-export function addRegistration(parentElement, options){
+export function addRegistration(api, parentElement, options){
 	var regBtn = parentElement.querySelector('#registrationBtn');
 	var submitBtn = parentElement.querySelector('#submitBtn');
 	//Checks for a loginDiv
@@ -310,7 +325,7 @@ export function addRegistration(parentElement, options){
 		var formDiv = createElement('div', null, options);
 		populateRegistrationForm(formDiv);
 		appendElement(parentElement, formDiv);
-		submitRegistrationForm(parentElement);
+		submitRegistrationForm(api, parentElement);
 	});
 }
 
@@ -320,6 +335,7 @@ export function addRegistration(parentElement, options){
  */
 function populateRegistrationForm(formDiv){
 
+	//Official Name
 	var slaveName = createElement('label', null, {for:'slaveName'});
 	slaveName.innerHTML=boldStatement('Official Name');
 	greenText(slaveName);
@@ -327,6 +343,7 @@ function populateRegistrationForm(formDiv){
 	appendElement(formDiv, slaveName);
 	appendElement(formDiv, slaveNamePlaceHolderText);
 
+	//Username
 	var uname = createElement('label', null, {for:'newUname'});
 	uname.innerHTML=boldStatement('Username');
 	greenText(uname);
@@ -334,11 +351,31 @@ function populateRegistrationForm(formDiv){
 	appendElement(formDiv, uname);
 	appendElement(formDiv, unamePlaceHolderText);
 
-	// XXX implement realtime username check
+	//email
+	var email = createElement('label', null, {for:'uEmailAddress'});
+	email.innerHTML=boldStatement('Email');
+	greenText(email);
+	var emailPlaceHolderText = createElement('input', null, {id: 'userEmail', type: 'email', placeholder:'You Shall Not be Spammed!', name: 'uEmailAddress', require:true});
+	appendElement(formDiv, email);
+	appendElement(formDiv, emailPlaceHolderText);
 
-	/*
-	 * Add password here.
-	 */
+	//New Password
+	var pswd = createElement('label', null, {for:'newPassword'});
+	pswd.innerHTML=boldStatement('New Password');
+	greenText(pswd);
+	var pswdPlaceHolderText = createElement('input', null, {id: 'newUserPassword', type: 'password', placeholder:'Create a Secret', name: 'newPassword', require:true});
+	appendElement(formDiv, pswd);
+	appendElement(formDiv, pswdPlaceHolderText);
+
+	//Confirm New Password
+	var confirmPswd = createElement('label', null, {for:'confirmNewPassword'});
+	confirmPswd.innerHTML=boldStatement('Confirm New Password');
+	greenText(confirmPswd);
+	var confirmPswdPlaceHolderText = createElement('input', null, {id: 'confirmNewUserPassword', type: 'password', placeholder:'Make Sure to Remember It', name: 'confirmNewPassword', require:true});
+	appendElement(formDiv, confirmPswd);
+	appendElement(formDiv, confirmPswdPlaceHolderText);
+
+	// XXX implement realtime username check
 
 	var submitRegBtn = createElement('button', null, {id:'submitRegBtn', type:'submit'});
 	submitRegBtn.innerHTML='Submit';
@@ -349,25 +386,71 @@ function populateRegistrationForm(formDiv){
  * EventListener listening to clicking of submit form button
  * the form details are collected and a validation is carried out
  */
-function submitRegistrationForm(parentElement){
+async function submitRegistrationForm(api, parentElement){
 	var submitRegBtn = parentElement.querySelector('#submitRegBtn');
 	submitRegBtn.addEventListener('click',async function(){
+
 		var slaveName = document.getElementsByName('slaveName')[0].value;
 		var newUname = document.getElementsByName('newUname')[0].value;
-		//console.log(slaveName);
-		//console.log(newUname);
-		if (slaveName == null || slaveName === '' || newUname == null || newUname === '') {
-			showErrorAfter(document.getElementById('newUsername'), "Username or Password Field Empty.", 'emptyFormField');
+		var uEmailAddress = document.getElementsByName('uEmailAddress')[0].value;
+		var newPassword = document.getElementsByName('newPassword')[0].value;
+		var confirmNewPassword = document.getElementsByName('confirmNewPassword')[0].value;
+
+		if (checkEmptyString([slaveName, newUname, uEmailAddress, newPassword, confirmNewPassword]) != true) {
+			showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Incorrect Input.', 'formFieldError');
 		} else {
-			//check for duplicate username
-			if (await checkUser(newUname)){
-				showErrorAfter(document.getElementById('newUsername'), "Username already Exists.", 'userNameExists');
+			var retVal1 = newPasswordCheck(newPassword,confirmNewPassword);
+			var retVal2 = newEmailCheck(uEmailAddress);
+			if(retVal1 && retVal2){
+				var registrationObject = {
+					'username': newUname,
+					'password': confirmNewPassword,
+					'email': uEmailAddress,
+					'name': slaveName
+				}
+				var statusNb = await api.getSignUp(registrationObject);
+				if(statusNb === 200){
+					//console.log(statusNb);
+					feed(api, parentElement);
+				} else if (statusNb === 409) {
+					showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Username not available.', 'formFieldError');
+				} else if (statusNb == 400) {
+					showErrorAfter(document.getElementById('confirmNewUserPassword'), 'I feel broken. Please try again.', 'formFieldError');
+				} else {
+					throw statusNb+": Malformed response from getSignUp()";
+				}
+
 			} else {
-				//Create new user object for json file
-				console.log("Success");
+				if(!retVal1){
+					showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Passwords Do Not Match.', 'formFieldError');
+				} else if (!retVal2) {
+					showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Incorrect Email.', 'formFieldError');
+				}
 			}
 		}
 	});
+}
+
+/*
+ * takes two strings and compares if they are ===
+ * return true if they are equal and returns false otherwise
+ */
+function newPasswordCheck(password1, password2){
+	//console.log(password1+' '+password2);
+	if(password1 !== password2){
+		return false;
+	}
+	return true;
+}
+
+/*
+ *	takes a string and performs an email regex check and returns true on match
+ *	and false on mismatch
+ */
+function newEmailCheck(email){
+	//https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
+	var re = /^(([^<>()\[\]\\.,;:\s@']+(\.[^<>()\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	return re.test(String(email).toLowerCase());
 }
 
 /***********************************************************
@@ -379,39 +462,27 @@ Feed Interface
  *	Creates a div and populates it with posts from fetch
  * 	adds the div to the parent element
  */
-async function feed(parentElement){
+async function feed(api, parentElement){
 	var mainDiv = createElement('div', null,{id:'mainFeed', style:'border:1px solid'});
 	mainDiv.style.backgroundColor = 'black';
-	const url = 'http://localhost:8080/data/feed.json';
-	var jsonData = await getData(url);
+	//const url = 'http://localhost:8080/data/feed.json';
+	//var jsonData = await getData(url);
+	var p=0;
+	var n=10;
+	var userData = await api.getFeed(p,n);
 
-	sortDatePublished(jsonData);
-	//console.log(jsonData);
+	//console.log(userData.posts);
 
-	for(var i = 0; i < jsonData.length; i++){
-		let item = createPostTile(jsonData[i]);
+	//https://stackoverflow.com/questions/41034716/sort-json-data-based-on-date-and-time
+	userData.posts.sort(function(a,b){
+		return a-b;
+	});
+
+	for(var i = 0; i < userData.posts.length; i++){
+		let item = createPostTile(userData.posts[i]);
 		appendElement(mainDiv, item);
 	}
+
 	appendElement(parentElement, mainDiv);
-}
 
-/**
- *	sorts the array of objects by date
- *
- */
-function sortDatePublished(jsonData){
-	//https://stackoverflow.com/questions/41034716/sort-json-data-based-on-date-and-time
-	jsonData.sort(function(a,b){
-		var months = [["Jan",1],["Feb",2],["Mar",3],["Apr",4],["May",5],["Jun",6],["Jul",7],["Aug",8],["Sep",9],["Oct",10],["Nov",11],["Dec",12]];
-		var month = new Map(months);
-
-		var ele1 = a.meta.published.split(" ");
-		var ele2 = b.meta.published.split(" ");
-		var gmt1 = ele1[5].split("+");
-		var gmt2 = ele1[5].split("+");
-		var date1 = ele1[3]+"-"+month.get(ele1[1])+"-"+ele1[2]+"T"+ele1[4]+"+"+gmt1[1].substring(0, 2)+":"+gmt1[1].substring(2, 4);
-		var date2 = ele2[3]+"-"+month.get(ele2[1])+"-"+ele2[2]+"T"+ele2[4]+"+"+gmt2[1].substring(0, 2)+":"+gmt2[1].substring(2, 4);
-
-		return date2.localeCompare(date1);
-	});
 }

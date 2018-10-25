@@ -2,9 +2,9 @@
 import * as helper from './helpers.js';
 
 // when importing 'default' exports, use below syntax
-//import API from './api.js';
+import API from './api.js';
 
-//const api  = new API();
+const api  = new API();
 
 document.body.style.backgroundColor = 'black';
 
@@ -21,9 +21,8 @@ h1Elements[0].style.color='#1ec503';
 
 var mainRole = document.querySelector('main');
 
-helper.addLogin(mainRole, {class:'loginContainer', id:'frontpageUnamePass'});
-helper.addRegistration(mainRole, {class:'formContainer', id:'frontpageRegistration'});
-
+helper.addLogin(api, mainRole, {class:'loginContainer', id:'frontpageUnamePass'});
+helper.addRegistration(api, mainRole, {class:'formContainer', id:'frontpageRegistration', style:'background-color:black;'});
 /*
 feed
 .then(posts => {
@@ -39,7 +38,7 @@ feed
 
 
 // Potential example to upload an image
-const input = document.querySelector('input[type="file"]');
+const input = document.querySelector('input[type='file']');
 
 input.addEventListener('change', uploadImage);
 */

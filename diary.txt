@@ -4,4 +4,7 @@
 23/10/18    15:00	 15:30	 Subset 0 Registration
 23/10/18    16:30	 18:00	 Subset 0 Registration
 23/10/18    20:00	 22:30	 Subset 0 Feed Interface
-24/10/18		18:00	 20:00	 Subset 0 Feed Interface completed			                  
+24/10/18		18:00	 20:00	 Subset 0 Feed Interface completed
+24/10/18		20:00	 22:00	 Subset 1 Understanding Spec and API Docs
+25/10/18		10:00	 12:30	 Subset 1 Understanding Spec and API Docs
+25/10/18		16:30	 18:10	 Subset 1 API calls
