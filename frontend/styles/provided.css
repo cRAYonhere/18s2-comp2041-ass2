@@ -49,28 +49,51 @@ footer {
     max-width: 640px;
     overflow: hidden;
     margin: 30px auto;
-    background-color: white;
-    border: 1px solid rgba(0,0,0,.0975);
+    background-color: black;
 }
 
 .post-title {
-    padding: 20px 40px;
-    margin: 0;
-    border-bottom: 1px solid rgba(0,0,0,.0975);
+	color: #1ec503;
+    margin-top: 0px;
+    margin-bottom: 10px;
+	padding: 0px 0px 0px 105px;
 }
 
-.post-thumb {
-    margin: 0;
-    padding: 3px;
-    width: 150px;
-    height: 150px;
-    border: 2px solid snow;
+.post-published {
+	color: #1ec503;
+	display: inline;
+	padding: 0px 0px 0px 105px;
 }
-
 .post-image {
-    width: 640px;
-    height: 640px;
+    width: 70%;
+    height: 70%;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
 }
+.post-description_text {
+	color: #1ec503;
+	width: 450px;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	word-wrap: break-word;
+}
+.post-likes {
+	padding: 25px 15px 75px 100px;
+	color: #1ec503;
+}
+.post-comments {
+	padding: 25px 50px 75px 15px;
+	color: #1ec503;
+}
+
+
+
+
+
+
 
 /* inputs
 https://www.w3schools.com/howto/howto_css_login_form.asp

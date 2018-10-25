@@ -35,15 +35,19 @@ export function createElement(tag, data, options = {}) {
  * @returns {HTMLElement}
  */
 export function createPostTile(post) {
+	// XXX CSS Failed
+	//console.log(post);
     const section = createElement('section', null, { class: 'post'});
     section.appendChild(createElement('h2', post.meta.author, { id:post.id+'-post-title', class: 'post-title'}));
-	section.appendChild(createElement('p', post.meta.published.substring(0, 24), { id:post.id+'-post-published', class: 'post-published'}));
+	var date = new Date(post.meta.published*1000);
+	var dateStr = date.toString();
+	section.appendChild(createElement('p', dateStr.substring(0,24), { id:post.id+'-post-published', class: 'post-published'}));
 	//https://stackoverflow.com/questions/1347675/html-img-scaling
     section.appendChild(createElement('img', null,
         { id:post.id+'-post-image', src: 'data:image/png;base64,'+post.src, alt: post.meta.description_text, class: 'post-image'}));
 	section.appendChild(createElement('p', post.meta.description_text, { id:post.id+'-post-description_text', class: 'post-description_text'}));
 	section.appendChild(createElement('span', '(y) '+post.meta.likes.length, { id:post.id+'-post-likes', class: 'post-likes'}));
-	section.appendChild(createElement('span', '(c) '+'0', { id:post.id+'-post-comments', class: 'post-comments'}));
+	section.appendChild(createElement('span', '(c) '+post.comments.length, { id:post.id+'-post-comments', class: 'post-comments'}));
 	return section;
 }
 
@@ -135,37 +139,6 @@ function showErrorAfter(btn, msg, id) {
 	var error = createElement('p', null, {id:id, style:'color:red'});
 	error.innerHTML = msg;
 	btn.after(error);
-}
-
-/**
- * fetch function returns a Promise
- * on resolution returns boolean on if user exists
- */
-function checkUser(uName) {
-	return fetch('http://localhost:8080/data/users.json')
-	.then(function(resp) {
-		return resp.json();
-	})
-	.then(function(users) {
-		//console.log(JSON.stringify(myJson));
-		for(var i = 0; i < users.length; i++){
-			if (users[i]['username'] == uName){
-				return true;
-			}
-		}
-		return false;
-	});
-}
-
-/**
- *	asyncronous fetch of url
- *	Takes a url and return data is json format
- */
-function getData(url){
-	return fetch(url)
-	.then(function(resp){
-		return resp.json();
-	});
 }
 
 /**
@@ -272,7 +245,7 @@ function checkCredentials(api, credential){
 			showErrorAfter(document.getElementById('loginPassword'), 'Missing Username/Password', 'incorrectUnamePass');
 			return false;
 		} else {
-			throw resp +" Unknown response code";
+			throw resp +' Unknown response code';
 		}
 	});
 
@@ -417,7 +390,7 @@ async function submitRegistrationForm(api, parentElement){
 				} else if (statusNb == 400) {
 					showErrorAfter(document.getElementById('confirmNewUserPassword'), 'I feel broken. Please try again.', 'formFieldError');
 				} else {
-					throw statusNb+": Malformed response from getSignUp()";
+					throw statusNb+': Malformed response from getSignUp()';
 				}
 
 			} else {
@@ -486,3 +459,7 @@ async function feed(api, parentElement){
 	appendElement(parentElement, mainDiv);
 
 }
+
+/***********************************************************
+Interact
+***********************************************************/

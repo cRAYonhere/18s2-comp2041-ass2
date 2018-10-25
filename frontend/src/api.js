@@ -36,7 +36,7 @@ export default class API {
 				'Authorization': 'Token '+TOKEN
 			}
 		}).then(response => {
-    		return response.json();
+			return response.json();
 		});
     }
 
@@ -45,12 +45,12 @@ export default class API {
      */
     getMe(authObject) {
 		return fetch(`${API_URL}/auth/login`, {
-    		method: 'POST',
-    		body: JSON.stringify(authObject),
-    		headers: {
+			method: 'POST',
+			body: JSON.stringify(authObject),
+			headers: {
 				'Accept': 'application/json',
-        		'Content-Type': 'application/json'
-    		}
+				'Content-Type': 'application/json'
+			}
 		})
 		.then(async function(resp) {
 			var tokenObject = await resp.json();
@@ -68,17 +68,17 @@ export default class API {
 	 */
 	getSignUp(registrationObject) {
 		return fetch(`${API_URL}/auth/signup`, {
-	    method: 'POST',
-	    body: JSON.stringify(registrationObject),
-	    headers: {
-	        'Content-Type': 'application/json'
-	    } })
-		.then(async function(resp) {
-			var tokenObject = await resp.json();
-			if(resp.status === 200){
+			method: 'POST',
+			body: JSON.stringify(registrationObject),
+			headers: {
+				'Content-Type': 'application/json'
+			} })
+			.then(async function(resp) {
+				var tokenObject = await resp.json();
+				if(resp.status === 200){
 				TOKEN = tokenObject.token;
 			}
 			return resp.status;
-		});
+			});
+		}
 	}
-}
