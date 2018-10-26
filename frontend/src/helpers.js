@@ -59,30 +59,6 @@ export function createPostTile(post) {
 }
 
 
-// Given an input element of type=file, grab the data uploaded for use
-export function uploadImage(event) {
-    const [ file ] = event.target.files;
-
-    const validFileTypes = [ 'image/jpeg', 'image/png', 'image/jpg' ]
-    const valid = validFileTypes.find(type => type === file.type);
-
-    // bad data, let's walk away
-    if (!valid)
-        return false;
-
-    // if we get here we have a valid image
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-        // do something with the data result
-        const dataURL = e.target.result;
-        const image = createElement('img', null, { src: dataURL });
-        document.body.appendChild(image);
-    };
-
-    // this returns a base64 image
-    reader.readAsDataURL(file);
-}
 
 /**
     Reminder about localStorage
@@ -453,12 +429,17 @@ function navigation(api, parentElement){
 		feed(api, main);
 	});
 
+	newPostEle.addEventListener('click', function(event) {
+		var main = document.querySelector('main');
+		updateNavigationBar(2);
+		newPost(api, main);
+	});
+
 	followEle.addEventListener('click', function(event) {
 		var main = document.querySelector('main');
 		updateNavigationBar(4);
 		follow(api, main);
 	});
-
 }
 /*
  *	Takes a newElement number(1,2,3,4) and updates the corresponding
@@ -503,14 +484,14 @@ function updateNavigationBar(navElement){
 
 /***********************************************************
 Feed Interface
-***********************************************************/
+**********************main*************************************/
 
 /**
  *
  *	Creates a div and populates it with posts from fetch
  * 	adds the div to the parent element
  */
-async function feed(api, parentElement){
+async function feed(api, mainRole){
 	USER_DATA = await api.getApiUser();
 	var mainDiv = createElement('div', null,{id:'userDisplay'});
 	mainDiv.style.backgroundColor = 'black';
@@ -529,7 +510,7 @@ async function feed(api, parentElement){
 		let item = createPostTile(userData.posts[i]);
 		appendElement(mainDiv, item);
 	}
-	appendElement(parentElement, mainDiv);
+	appendElement(mainRole, mainDiv);
 	iteractive(api);
 }
 
@@ -689,9 +670,13 @@ function showComments(api){
 Follow
 ***********************************************************/
 
-
-function follow(api){
-	var mainRole = document.querySelector('main');
+/*
+ *
+ *	Takes the api as argument
+ *	and listes for click event on follow navigation bar
+ *	create div elements to support search, follow and unfollow
+ */
+function follow(api, mainRole){
 
 	var followDiv = createElement('div', null,{id:'userDisplay'});
 
@@ -744,4 +729,50 @@ function follow(api){
 			showErrorAfter(placeHolderText,'Cannot Follow Yourself.', 'followError');
 		}
 	});
+}
+
+
+/***********************************************************
+New Post
+***********************************************************/
+
+function newPost(api, mainRole){
+	var newPostDiv = createElement('div', null,{id:'userDisplay', class: 'uploadImageClass'});
+
+
+
+	//Official Name
+	var postDesc = createElement('label', null, {for:'postDescription'});
+	postDesc.innerHTML=boldStatement('Description');
+	greenText(postDesc);
+	var descriptionElement = createElement('input', null, {class: 'description-field', id: 'postDescription', type: 'text', placeholder:'Add your description here', name: 'description', require:true});
+	appendElement(newPostDiv, postDesc);
+	appendElement(newPostDiv, descriptionElement);
+
+	var upImage = createElement('input', null, {class: 'upload-file', id: 'uploadPost', type: 'file', name: 'uploadImageFile', require:true});
+	var submitBtn = createElement('p', '| submit |', {class: 'submit-file', id: 'submitBtn', class: 'submit-Btn'});
+	appendElement(newPostDiv, upImage);
+	appendElement(newPostDiv, submitBtn);
+	appendElement(mainRole, newPostDiv);
+
+	newPostDiv.appendChild(createElement('img', null,{ id:'post-image', src: '#', class: 'post-image', style:'display:none;'}));
+	newPostDiv.appendChild(createElement('p', null,{ id:'post-description', class: 'post-text-box', style:'display:none;'}));
+
+	var image = submitBtn.addEventListener('click', function() {
+		var desc = document.getElementById('post-description');
+		desc.style.display='block';
+		desc.innerHTML = document.getElementsByName('description')[0].value;
+		var imageRaw = document.getElementsByName('uploadImageFile')[0].files;
+		if (imageRaw && imageRaw[0]) {
+          	var img = document.querySelector('img');  // $('img')[0]
+		  	img.style.display='block';
+          	img.src = URL.createObjectURL(imageRaw[0]); // set src to file url
+          	img.onload = confirmNupload(newPostDiv); // optional onload event listener
+      }
+	});
+
+}
+
+function confirmNupload(newPostDiv){
+	newPostDiv.appendChild(createElement('p', null,{ id:'post-description', class: 'post-text-box', style:'display:none;'}));
 }

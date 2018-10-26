@@ -13,4 +13,6 @@
 25/10/18		21:00	 23:00	 Subset 3 Like
 26/10/18		10:00	 14:00	 Subset 3 Comment
 26/10/18		15:30	 17:00	 Subset 3 Comment
-26/10/18		17:30	 21:00	 Subset 3 Follow/Unfollow
+26/10/18		17:30	 18:30	 Navigation Bar
+26/10/18		18:30	 21:00	 Subset 3 Follow/Unfollow
+26/10/18		21:00	 23:30	 Subset 3 New Post Half way
