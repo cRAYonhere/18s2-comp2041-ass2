@@ -38,8 +38,7 @@ export function createElement(tag, data, options = {}) {
  */
 export function createPostTile(post) {
 	// XXX CSS Failed
-	//console.log(post);
-    const section = createElement('section', null, { class: 'post'});
+    const section = createElement('section', null, { id:post.id+'-post', class: 'post'});
     section.appendChild(createElement('h2', post.meta.author, { id:post.id+'-post-title', class: 'post-title'}));
 	var date = new Date(post.meta.published*1000);
 	var dateStr = date.toString();
@@ -49,7 +48,13 @@ export function createPostTile(post) {
         { id:post.id+'-post-image', src: 'data:image/png;base64,'+post.src, alt: post.meta.description_text, class: 'post-image'}));
 	section.appendChild(createElement('p', post.meta.description_text, { id:post.id+'-post-description_text', class: 'post-description_text'}));
 	section.appendChild(createElement('span', '(y) '+post.meta.likes.length, { id:post.id+'-post-like', class: 'post-likes'}));
-	section.appendChild(createElement('span', '(c) '+post.comments.length, { id:post.id+'-post-comment', class: 'post-comments'}));
+	section.appendChild(createElement('span', '(c) '+post.comments.length, { id:post.id+'-post-comment-count', class: 'post-comments-count'}));
+	if (post.comments.length > 0){
+		section.appendChild(createElement('span', '+', { id: post.id+'-post-show-comment', class: 'post-show-comments'}));
+	} else {
+		section.appendChild(createElement('span', '+', { id: post.id+'-post-show-comment', class: 'post-show-comments', style:'display:none;'}));
+	}
+	section.appendChild(createElement('span', '-', { id: post.id+'-post-hide-comment', class: 'post-hide-comments', style:'display:none;'}));
 	return section;
 }
 
@@ -103,7 +108,6 @@ General Functions
  *	and then returns the parent with child element added to its body
  */
 export function appendElement(parent, ch){
-	//console.log(parent);
 	return parent.appendChild(ch);
 }
 
@@ -147,13 +151,13 @@ function showErrorAfter(ele, msg, id) {
  *	Takes a list and returns the first null or empty string encountered
  *	Otherwise returns true;
  */
-function checkEmptyString(list){
+function isAnyStringEmpty(list){
 	for(var i = 0; i < list.length; i++){
 		if(list[i] === '' || list[i] ==  null) {
 			return i;
 		}
 	}
-	return true;
+	return false;
 }
 /***********************************************************
 Login
@@ -168,18 +172,18 @@ export function addLogin(api, parentElement, options){
 	var loginDiv = createElement('div', null, options);
 
 	//Create input field for username and add it to loginDiv
-	var uname = createElement('label', null, {for:'uname'});
+	var uname = createElement('label', null, { for:'loginUsername'});
 	uname.innerHTML=boldStatement('Username');
 	greenText(uname);
-	var unamePlaceHolderText = createElement('input', null, {id: 'loginUsername', type: 'text', placeholder:'Enter Username', name: 'uname', require:true});
+	var unamePlaceHolderText = createElement('input', null, {class: 'login-field', id: 'loginUsername', type: 'text', placeholder:'Enter Username', name: 'uname', require:true});
 	appendElement(loginDiv, uname);
 	appendElement(loginDiv, unamePlaceHolderText);
 
 	//Create input field for password and add it to loginDiv
-	var upass = createElement('label', null, {for:'pswd'});
+	var upass = createElement('label', null, {for:'loginPassword'});
 	upass.innerHTML=boldStatement('Password');
 	greenText(upass);
-	var upassPlaceHolderText = createElement('input', null, {id: 'loginPassword', type: 'password', placeholder:'Enter Password', name: 'pswd', require:true});
+	var upassPlaceHolderText = createElement('input', null, {class: 'login-field', id: 'loginPassword', type: 'password', placeholder:'Enter Password', name: 'pswd', require:true});
 	appendElement(loginDiv, upass);
 	appendElement(loginDiv, upassPlaceHolderText);
 
@@ -204,7 +208,6 @@ export function addLogin(api, parentElement, options){
  */
 function checkUnamePass(api, parentElement){
 	var submitbtn = document.getElementById('submitBtn');
-	//console.log(submitbtn);
 	var username = document.getElementsByName('uname');
 	var password = document.getElementsByName('pswd');
 	submitbtn.addEventListener('click', async function(){
@@ -214,8 +217,6 @@ function checkUnamePass(api, parentElement){
 		if (uname == null || uname === '' || pswd == null || pswd === '') {
 			showErrorAfter(document.getElementById('loginPassword'), 'Username or Password Field Empty.', 'emptyLoginField');
 		} else {
-			//console.log(uname);
-			//console.log(pswd);
 			var creds = {username:username[0].value, password:password[0].value}
 			//https://javascript.info/async-await
 			let result = await checkCredentials(api, creds);
@@ -257,10 +258,9 @@ function checkCredentials(api, credential){
  *	Removes the loginDiv and adds user page
  */
 function loggedIn(api, parentElement){
-	//console.log('Logged IN');
-
 	//removes the loginDiv
 	document.getElementById('frontpageUnamePass').remove();
+	navigation(api, parentElement);
 	feed(api, parentElement);
 }
 
@@ -286,7 +286,6 @@ export function addRegistration(api, parentElement, options){
 		//Unhides registration button if loginDiv is found
 		regBtn.style.display = 'inline';
 		submitBtn.style.display = 'inline';
-		//console.log(regBtn);
 	} else {
 		// XXX creates a registration button  and returns it if loginDiv is not found
 		return;
@@ -311,42 +310,42 @@ export function addRegistration(api, parentElement, options){
 function populateRegistrationForm(formDiv){
 
 	//Official Name
-	var slaveName = createElement('label', null, {for:'slaveName'});
+	var slaveName = createElement('label', null, {for:'officialName'});
 	slaveName.innerHTML=boldStatement('Official Name');
 	greenText(slaveName);
-	var slaveNamePlaceHolderText = createElement('input', null, {id: 'slaveName', type: 'text', placeholder:'Your slave name', name: 'slaveName', require:true});
+	var slaveNamePlaceHolderText = createElement('input', null, {class: 'registration-field', id: 'officialName', type: 'text', placeholder:'Your slave name', name: 'slaveName', require:true});
 	appendElement(formDiv, slaveName);
 	appendElement(formDiv, slaveNamePlaceHolderText);
 
 	//Username
-	var uname = createElement('label', null, {for:'newUname'});
+	var uname = createElement('label', null, {for:'newUsername'});
 	uname.innerHTML=boldStatement('Username');
 	greenText(uname);
-	var unamePlaceHolderText = createElement('input', null, {id: 'newUsername', type: 'text', placeholder:'Hence Forth You Shall Be Beckoned As', name: 'newUname', require:true});
+	var unamePlaceHolderText = createElement('input', null, {class: 'registration-field', id: 'newUsername', type: 'text', placeholder:'Hence Forth You Shall Be Beckoned As', name: 'newUname', require:true});
 	appendElement(formDiv, uname);
 	appendElement(formDiv, unamePlaceHolderText);
 
 	//email
-	var email = createElement('label', null, {for:'uEmailAddress'});
+	var email = createElement('label', null, {for:'userEmail'});
 	email.innerHTML=boldStatement('Email');
 	greenText(email);
-	var emailPlaceHolderText = createElement('input', null, {id: 'userEmail', type: 'email', placeholder:'You Shall Not be Spammed!', name: 'uEmailAddress', require:true});
+	var emailPlaceHolderText = createElement('input', null, {class: 'registration-field', id: 'userEmail', type: 'email', placeholder:'You Shall Not be Spammed!', name: 'uEmailAddress', require:true});
 	appendElement(formDiv, email);
 	appendElement(formDiv, emailPlaceHolderText);
 
 	//New Password
-	var pswd = createElement('label', null, {for:'newPassword'});
+	var pswd = createElement('label', null, {for:'newUserPassword'});
 	pswd.innerHTML=boldStatement('New Password');
 	greenText(pswd);
-	var pswdPlaceHolderText = createElement('input', null, {id: 'newUserPassword', type: 'password', placeholder:'Create a Secret', name: 'newPassword', require:true});
+	var pswdPlaceHolderText = createElement('input', null, {class: 'registration-field', id: 'newUserPassword', type: 'password', placeholder:'Create a Secret', name: 'newPassword', require:true});
 	appendElement(formDiv, pswd);
 	appendElement(formDiv, pswdPlaceHolderText);
 
 	//Confirm New Password
-	var confirmPswd = createElement('label', null, {for:'confirmNewPassword'});
+	var confirmPswd = createElement('label', null, {for:'confirmNewUserPassword'});
 	confirmPswd.innerHTML=boldStatement('Confirm New Password');
 	greenText(confirmPswd);
-	var confirmPswdPlaceHolderText = createElement('input', null, {id: 'confirmNewUserPassword', type: 'password', placeholder:'Make Sure to Remember It', name: 'confirmNewPassword', require:true});
+	var confirmPswdPlaceHolderText = createElement('input', null, {class: 'registration-field', id: 'confirmNewUserPassword', type: 'password', placeholder:'Make Sure to Remember It', name: 'confirmNewPassword', require:true});
 	appendElement(formDiv, confirmPswd);
 	appendElement(formDiv, confirmPswdPlaceHolderText);
 
@@ -371,7 +370,7 @@ async function submitRegistrationForm(api, parentElement){
 		var newPassword = document.getElementsByName('newPassword')[0].value;
 		var confirmNewPassword = document.getElementsByName('confirmNewPassword')[0].value;
 
-		if (checkEmptyString([slaveName, newUname, uEmailAddress, newPassword, confirmNewPassword]) != true) {
+		if (isAnyStringEmpty([slaveName, newUname, uEmailAddress, newPassword, confirmNewPassword]) !== false) {
 			showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Incorrect Input.', 'formFieldError');
 		} else {
 			var retVal1 = newPasswordCheck(newPassword,confirmNewPassword);
@@ -385,7 +384,6 @@ async function submitRegistrationForm(api, parentElement){
 				}
 				var statusNb = await api.postRegistration(registrationObject);
 				if(statusNb === 200){
-					//console.log(statusNb);
 					feed(api, parentElement);
 				} else if (statusNb === 409) {
 					showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Username not available.', 'formFieldError');
@@ -411,7 +409,6 @@ async function submitRegistrationForm(api, parentElement){
  * return true if they are equal and returns false otherwise
  */
 function newPasswordCheck(password1, password2){
-	//console.log(password1+' '+password2);
 	if(password1 !== password2){
 		return false;
 	}
@@ -427,6 +424,82 @@ function newEmailCheck(email){
 	var re = /^(([^<>()\[\]\\.,;:\s@']+(\.[^<>()\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 	return re.test(String(email).toLowerCase());
 }
+/***********************************************************
+Navigation
+***********************************************************/
+
+/*
+ * Takes apiObject and main Div as arguments
+ * creates the navigation bar
+ * and starts events listeners on each options
+ */
+function navigation(api, parentElement){
+	//https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_topnav
+	var div = createElement('div', null, {class: 'navigation-bar'});
+	var myFeedEle = createElement('a', '->My Feed<-', {id: 'myFeedNav', class: 'navigation-elements'});
+	div.appendChild(myFeedEle);
+	var newPostEle = createElement('a', 'New Post', {id: 'newPostNav', class: 'navigation-elements'});
+	div.appendChild(newPostEle);
+	var myProfileEle = createElement('a', 'My Profile', {id: 'myProfileNav', class: 'navigation-elements'});
+	div.appendChild(myProfileEle);
+	var followEle = createElement('a', 'Follow', {id: 'followNav', class: 'navigation-elements'});
+	div.appendChild(followEle);
+	appendElement(parentElement, div);
+
+
+	myFeedEle.addEventListener('click', function(event) {
+		var main = document.querySelector('main');
+		updateNavigationBar(1);
+		feed(api, main);
+	});
+
+	followEle.addEventListener('click', function(event) {
+		var main = document.querySelector('main');
+		updateNavigationBar(4);
+		follow(api, main);
+	});
+
+}
+/*
+ *	Takes a newElement number(1,2,3,4) and updates the corresponding
+ * 	nav element as active and deactivates the others
+ */
+function updateNavigationBar(navElement){
+	var myFeed = 'My Feed';
+	var newPost = 'New Post';
+	var myProfile = 'My Profile';
+	var follow = 'Follow';
+
+	var myFeedNav = document.getElementById('myFeedNav');
+	var newPostNav = document.getElementById('newPostNav');
+	var myProfileNav = document.getElementById('myProfileNav');
+	var followNav = document.getElementById('followNav');
+
+	document.getElementById('userDisplay').remove();
+	if(navElement === 1){
+		myFeedNav.innerHTML = '->'+myFeed+'<-';
+	} else {
+		myFeedNav.innerHTML = myFeed;
+	}
+
+	if(navElement === 2){
+		newPostNav.innerHTML = '->'+newPost+'<-';
+	} else {
+		newPostNav.innerHTML = newPost;
+	}
+
+	if(navElement === 3){
+		myProfileNav.innerHTML = '->'+myProfile+'<-';
+	} else {
+		myProfileNav.innerHTML = myProfile;
+	}
+
+	if(navElement === 4){
+		followNav.innerHTML = '->'+follow+'<-';
+	} else {
+		followNav.innerHTML = follow;
+	}
+}
 
 /***********************************************************
 Feed Interface
@@ -439,16 +512,13 @@ Feed Interface
  */
 async function feed(api, parentElement){
 	USER_DATA = await api.getApiUser();
-	//console.log(USER_DATA);
-	var mainDiv = createElement('div', null,{id:'mainFeed', style:'border:1px solid'});
+	var mainDiv = createElement('div', null,{id:'userDisplay'});
 	mainDiv.style.backgroundColor = 'black';
 	//const url = 'http://localhost:8080/data/feed.json';
 	//var jsonData = await getData(url);
 	var p=0;
-	var n=10;
+	var n=100;
 	var userData = await api.getFeed(p,n);
-
-	//console.log(userData.posts);
 
 	//https://stackoverflow.com/questions/41034716/sort-json-data-based-on-date-and-time
 	userData.posts.sort(function(a,b){
@@ -459,21 +529,24 @@ async function feed(api, parentElement){
 		let item = createPostTile(userData.posts[i]);
 		appendElement(mainDiv, item);
 	}
-
 	appendElement(parentElement, mainDiv);
 	iteractive(api);
 }
 
+
 /***********************************************************
-Interact
+Interactive
 ***********************************************************/
+
 /**
  *
  *	takes api as an argument and enables
- *	interactive features like "like", "unlike"
+ *	interactive features like 'like', 'unlike'
  */
 function iteractive(api){
 	likePost(api);
+	commentPost(api);
+	showComments(api);
 }
 
 /**
@@ -488,14 +561,11 @@ function likePost(api){
 		var postData = await api.getPost(postId);
 		var promiseResponse = 0;
 		if (postData.meta.likes.includes(USER_DATA.id) === true){
-			//console.log(USER_DATA.id+" unlike: "+postData.meta.likes);
 			promiseResponse = api.putUnLike(postId);
 		} else {
-			//console.log(USER_DATA.id+" like: "+postData.meta.likes);
 			promiseResponse = api.putLike(postId);
 		}
 		var statusNb = await promiseResponse;
-		//console.log(statusNb);
 		if (statusNb === 200) {
 			var newPostData = await api.getPost(postId);
 			updateLikes(newPostData, attribute);
@@ -511,8 +581,167 @@ function likePost(api){
  *	updates like count on the dom
  */
 async function updateLikes(postData, attribute){
-	//console.log(postData);
 	var likeElement = document.getElementById(attribute);
-	//console.log(postData.meta.likes.length);
 	likeElement.innerHTML = '(y) '+postData.meta.likes.length;
+}
+
+/**
+ *	Takes in the api object as a argument
+ *	attaches a event lister to all comment input commentBox
+ *	when a new comment is entered updates the comment in database
+ */
+function commentPost(api){
+	//https://stackoverflow.com/questions/19655189/javascript-click-event-listener-on-class
+	var showComments = document.getElementsByClassName('post-show-comments');
+	for(var i = 0; i < showComments.length; i++){
+		var eleId = showComments[i].getAttribute('id');
+		var postId = eleId.match(/^(\d+).+/)[1];
+		var commentInput = createElement('label', null, {for: postId+'-comment-box'});
+		var slaveNamePlaceHolderText = createElement('input', null, {id: postId+'-comment-box', class:'comment-box', type: 'text', placeholder:'Comments..', name: postId+'-commentBox'});
+		appendElement(commentInput, slaveNamePlaceHolderText);
+		showComments[i].after(commentInput)
+	}
+
+	var postNewComment = async function(attribute) {
+		var postId = attribute.match(/^(\d+).+/)[1];
+		var input = document.getElementsByName(postId+'-commentBox')[0].value;
+		/*If comment box is empty, returns*/
+		if(isAnyStringEmpty([input]) !== false){
+			return;
+		}
+		var commentObject = {
+			'author': USER_DATA.username,
+			'published': Math.round((new Date()).getTime() / 1000),
+			'comment': input
+		}
+		var promiseResponse = api.putComment(postId, commentObject);
+		var statusNb = await promiseResponse;
+		if (statusNb === 200) {
+			//https://stackoverflow.com/questions/14500270/remove-type-text-from-input-field
+			document.getElementById(attribute).value = '';
+			updateComments(api,attribute,0);
+		}
+	};
+
+	var postComments = document.getElementsByClassName('comment-box');
+	for (var i = 0; i < postComments.length; i++) {
+		postComments[i].addEventListener('keyup', function(event) {
+			event.preventDefault();
+			if (event.keyCode === 13) {
+				postNewComment(event.target.id);
+			}
+		})
+	}
+}
+
+/*
+ *	takes in api, id of the show comment button clicked and number of posts to add
+ *	diff = existing comments + more comments required to show
+ * 	creates the new comment elements in dom and displays the comments
+ */
+async function updateComments(api, showCommentId, diff){
+	//retractComments(showCommentId);
+	var postId = showCommentId.match(/^(\d+).+/)[1];
+	var postData = await api.getPost(postId);
+	var postCommentCount = document.getElementById(postId+'-post-comment-count');
+	var postshowComment = document.getElementById(postId+'-post-show-comment');
+	postshowComment.style.display = 'inline';
+	postCommentCount.innerHTML = '(c) '+postData.comments.length;
+	var section = document.getElementById(postId+'-post');
+	postData.comments.sort(function(a,b){
+		return b.published-a.published;
+	});
+
+	var postComment = section.getElementsByClassName('post-comment');
+
+	var removeId= Array ();
+	var showNbComments = Math.min(postData.comments.length, Math.max(postComment.length + diff,1));
+
+	for( var i = 0; i < postComment.length; i++){
+		removeId.push(postComment[i].getAttribute('id'));
+	}
+
+	for( var j = 0; j < removeId.length; j++){
+		document.getElementById(removeId[j]).remove();
+	}
+	var showCommentBtn = document.getElementById(postId+'-post-show-comment')
+	for( var k = 0; k < showNbComments; k++){
+		showCommentBtn.after(createElement('p', postData.comments[k].author+': '+postData.comments[k].comment, { id:postId+'-post-comment-'+k, class: 'post-comment'}));
+	}
+}
+
+/**
+ *	if the show comment button is clicked shows last 3 comments
+ */
+function showComments(api){
+	var showComments = document.getElementsByClassName('post-show-comments');
+
+	for (var i = 0; i < showComments.length; i++) {
+		showComments[i].addEventListener('click', function(event) {
+			event.preventDefault();
+			updateComments(api, event.target.id, 3);
+		});
+	}
+
+}
+
+/***********************************************************
+Follow
+***********************************************************/
+
+
+function follow(api){
+	var mainRole = document.querySelector('main');
+
+	var followDiv = createElement('div', null,{id:'userDisplay'});
+
+	//Search username
+	var followUser = createElement('label', null, {for:'followUsername'});
+	followUser.innerHTML=boldStatement('Follow User');
+	greenText(followUser);
+	var placeHolderText = createElement('input', null, {class: 'followUserInput', id: 'followUsername', type: 'text', placeholder:'Username', name: 'followName', require:true});
+	appendElement(followDiv, followUser);
+	appendElement(followDiv, placeHolderText);
+
+	var searchBtn = createElement('p', '| Search |', {id: 'searchUsernameBtn', class: 'search-Username-Btn'});
+	appendElement(followDiv, searchBtn);
+	appendElement(mainRole, followDiv);
+
+	searchBtn.addEventListener('click', async function(event) {
+		var userName = document.getElementsByName('followName')[0].value;
+		if (userName !== USER_DATA.username){
+			var srchResponse = await api.getUserDataByUsername(userName);
+			if(srchResponse.status === 200 ){
+				USER_DATA = await api.getApiUser();
+				var srchData = await srchResponse.json();
+
+				//IF user is already following the username give an option to Unfollow, else give an option to follow
+				if(USER_DATA.following.includes(srchData.id) === true){
+					var confirmUnfollow = createElement('p', 'Unfollow '+userName, {id: 'unfollowConfirmation', class: 'followConfirmation-Btn'});
+					appendElement(followDiv, confirmUnfollow);
+					confirmUnfollow.addEventListener('click', async function(event) {
+						var response = await api.unfollowUser(userName);
+						if (response === 200){
+							document.getElementById('unfollowConfirmation').innerHTML = 'Unfollowed '+userName;
+						}
+					});
+				} else {
+					var confirmfollow = createElement('p', 'Follow '+userName, {id: 'followConfirmation', class: 'followConfirmation-Btn'});
+					appendElement(followDiv, confirmfollow);
+					confirmfollow.addEventListener('click', async function(event) {
+						var response = await api.followUser(userName);
+						if (response === 200){
+							document.getElementById('followConfirmation').innerHTML = 'Following '+userName;
+						}
+					});
+				}
+
+
+			} else {
+				showErrorAfter(placeHolderText,'User Doesn\'t Exist', 'followError');
+			}
+		} else{
+			showErrorAfter(placeHolderText,'Cannot Follow Yourself.', 'followError');
+		}
+	});
 }

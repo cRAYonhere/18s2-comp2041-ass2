@@ -8,3 +8,9 @@
 24/10/18		20:00	 22:00	 Subset 1 Understanding Spec and API Docs
 25/10/18		10:00	 12:30	 Subset 1 Understanding Spec and API Docs
 25/10/18		16:30	 18:10	 Subset 1 API calls
+25/10/18		18:30	 20:10	 Subset 3 Infinite Scroll
+25/10/18		20:10	 21:00	 Fixed CSS breakdown !!!!!
+25/10/18		21:00	 23:00	 Subset 3 Like
+26/10/18		10:00	 14:00	 Subset 3 Comment
+26/10/18		15:30	 17:00	 Subset 3 Comment
+26/10/18		17:30	 21:00	 Subset 3 Follow/Unfollow
