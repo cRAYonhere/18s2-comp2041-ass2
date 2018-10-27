@@ -187,7 +187,7 @@ footer {
 	left: 230px;
 	cursor: pointer;
 	font-weight: bold;
-	font-size: 15px;
+	font-size: 20px;
 }
 
 .followConfirmation-Btn{
@@ -210,11 +210,22 @@ footer {
 	color: #1ec503;
 	padding: 5px 5px 5px 5px;
 	position: relative;
-	left: 55px;
+	left: 230px;
 	cursor: pointer;
 	font-weight: bold;
 	font-size: 20px;
 }
+.user-Profile-Display{
+	text-align: center;
+}
+.user-Profile-Information {
+	color: #1ec503;
+	display: inline-block;
+	padding: 20px 20px 20px 20px;
+	font-weight: bold;
+	font-size: 18px;
+}
+
 
 .description-field{
 	width: 30%;

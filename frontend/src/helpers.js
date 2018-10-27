@@ -170,7 +170,7 @@ export function addLogin(api, parentElement, options){
 	appendElement(loginDiv, regBtn);
 
 	//Login button
-	var loginBtn = createElement('button', null, {id:'submitBtn', type:'submit'});
+	var loginBtn = createElement('button', null, {id:'submitLoginBtn', type:'submit'});
 	loginBtn.innerHTML='Login';
 	appendElement(loginDiv, loginBtn);
 
@@ -183,7 +183,7 @@ export function addLogin(api, parentElement, options){
  *https://stackoverflow.com/questions/29311918/how-do-i-capture-data-entered-into-the-field-of-an-html-form
  */
 function checkUnamePass(api, parentElement){
-	var submitbtn = document.getElementById('submitBtn');
+	var submitbtn = document.getElementById('submitLoginBtn');
 	var username = document.getElementsByName('uname');
 	var password = document.getElementsByName('pswd');
 	submitbtn.addEventListener('click', async function(){
@@ -255,7 +255,7 @@ Registration Form
  */
 export function addRegistration(api, parentElement, options){
 	var regBtn = parentElement.querySelector('#registrationBtn');
-	var submitBtn = parentElement.querySelector('#submitBtn');
+	var submitBtn = parentElement.querySelector('#submitLoginBtn');
 	//Checks for a loginDiv
 	if( regBtn != null ){
 		//https://www.w3schools.com/jsref/prop_style_display.asp
@@ -434,6 +434,11 @@ function navigation(api, parentElement){
 		newPost(api, main);
 	});
 
+	myProfileEle.addEventListener('click', function(event) {
+		updateNavigationBar(3);
+		showProfile(api, main);
+	});
+
 	followEle.addEventListener('click', function(event) {
 		updateNavigationBar(4);
 		follow(api, main);
@@ -486,31 +491,40 @@ Feed Interface
 
 /**
  *
- *	Creates a div and populates it with posts from fetch
- * 	adds the div to the parent element
+ *	Creates a div and makes fetch call to get feed
+ *	calls renderUserFeed with array of post objects
+ *	calls iteractive to enable like and comments
  */
+
 async function feed(api, mainRole){
-	USER_DATA = await api.getApiUser();
+	var response = await api.getUserData();
+	USER_DATA = await response.json();
 	var mainDiv = createElement('div', null,{id:'userDisplay'});
-	mainDiv.style.backgroundColor = 'black';
-	//const url = 'http://localhost:8080/data/feed.json';
-	//let jsonData = await getData(url);
+
+	// XXX implement pagination, infinite scroll
 	var p=0;
 	var n=100;
 	var userData = await api.getFeed(p,n);
+	renderUserFeed(userData.posts, mainDiv);
+	appendElement(mainRole, mainDiv);
+
+	iteractive(api);
+}
+
+/**
+ *	populates mainDiv with the post objects from userData Array
+ */
+function renderUserFeed(userPosts, mainDiv){
 
 	//https://stackoverflow.com/questions/41034716/sort-json-data-based-on-date-and-time
-
-	userData.posts.sort(function(a,b){
+	userPosts.sort(function(a,b){
 		return b.meta.published - a.meta.published;
 	});
 
-	for(let i = 0; i < userData.posts.length; i++){
-		let item = createPostTile(userData.posts[i]);
+	for(let i = 0; i < userPosts.length; i++){
+		let item = createPostTile(userPosts[i]);
 		appendElement(mainDiv, item);
 	}
-	appendElement(mainRole, mainDiv);
-	iteractive(api);
 }
 
 
@@ -536,8 +550,8 @@ function likePost(api){
 	//https://stackoverflow.com/questions/19655189/javascript-click-event-listener-on-class
 	var postLikes = document.getElementsByClassName('post-likes');
 	var likeClick = async function() {
-		var attribute = this.getAttribute('id');
-		var postId = attribute.match(/^(\d+).+/)[1];
+		var likeId = this.getAttribute('id');
+		var postId = likeId.match(/^(\d+).+/)[1];
 		var postData = await api.getPost(postId);
 		var promiseResponse = 0;
 		if (postData.meta.likes.includes(USER_DATA.id) === true){
@@ -548,7 +562,7 @@ function likePost(api){
 		var statusNb = await promiseResponse;
 		if (statusNb === 200) {
 			var newPostData = await api.getPost(postId);
-			updateLikes(newPostData, attribute);
+			updateLikes(newPostData, likeId);
 		}
 	};
 
@@ -693,14 +707,21 @@ function follow(api, mainRole){
 	appendElement(mainRole, followDiv);
 
 	searchBtn.addEventListener('click', async function(event) {
+		var followConfirmationBtn = document.getElementsByClassName('followConfirmation-Btn');
+		for( let i = 0; i < followConfirmationBtn.length; i++){
+			document.getElementById(followConfirmationBtn[i].getAttribute('id')).remove();
+		}
 		var userName = document.getElementsByName('followName')[0].value;
 		if(isAnyStringEmpty([userName]) !== false){
 			showErrorAfter(placeHolderText,'Please enter a username.', 'followError');
 		}
 		else if (userName !== USER_DATA.username){
-			var srchResponse = await api.getUserDataByUsername(userName);
+			var srchResponse = await api.getUserData(null,userName);
 			if(srchResponse.status === 200 ){
-				USER_DATA = await api.getApiUser();
+
+				var response = await api.getUserData();
+				USER_DATA = await response.json();
+
 				var srchData = await srchResponse.json();
 
 				//IF user is already following the username give an option to Unfollow, else give an option to follow
@@ -714,8 +735,12 @@ function follow(api, mainRole){
 						}
 					});
 				} else {
-					var confirmfollow = createElement('p', 'Follow '+userName, {id: 'followConfirmation', class: 'followConfirmation-Btn'});
-					appendElement(followDiv, confirmfollow);
+
+					//var confirmfollow = document.getElementById('followConfirmation');
+					//if(confirmfollow == null){
+						var confirmfollow = createElement('p', 'Follow '+userName, {id: 'followConfirmation', class: 'followConfirmation-Btn'});
+						appendElement(followDiv, confirmfollow);
+					//}
 					confirmfollow.addEventListener('click', async function(event) {
 						var response = await api.followUser(userName);
 						if (response === 200){
@@ -755,7 +780,7 @@ function newPost(api, mainRole){
 	appendElement(newPostDiv, descriptionElement);
 
 	var upImage = createElement('input', null, {class: 'upload-file', id: 'uploadPost', type: 'file', name: 'uploadImageFile', require:true});
-	var submitBtn = createElement('p', '| submit |', {id: 'submitBtn', class: 'submit-Btn'});
+	var submitBtn = createElement('p', '| submit |', {id: 'submitNewPostBtn', class: 'submit-Btn'});
 	appendElement(newPostDiv, upImage);
 	appendElement(newPostDiv, submitBtn);
 	appendElement(mainRole, newPostDiv);
@@ -805,7 +830,6 @@ function newPost(api, mainRole){
 			showErrorAfter(upImage, 'Please add Description and Image.', 'errorNewPost');
 		}
 	});
-
 }
 
 /**
@@ -823,8 +847,6 @@ function confirmNupload(api, newPostDiv,postObject){
 		}
 		var resp = await api.postPost(postObject);
 		if (resp.status === 200){
-			//var postId = await resp.json();
-			//console.log(postId);
 			alert('Post Uploaded');
 			document.getElementById('userDisplay').remove();
 			newPost(api, document.querySelector('main'));
@@ -832,4 +854,62 @@ function confirmNupload(api, newPostDiv,postObject){
 			showErrorAfter(confirmSubmission, 'Please add Description and Image.', 'errorNewPost');
 		}
 	});
+}
+
+/***********************************************************
+Show Profile
+***********************************************************/
+
+async function showProfile(api, mainRole, id = null, username = null){
+
+	var newPostDiv = createElement('div', null,{id:'userDisplay', class: 'uploadImageClass'});
+	var userProfile = createElement('div', null,{id:'userProfileDisplay', class: 'user-Profile-Display'});
+	var userPostFeed = createElement('div', null,{id:'userPostFeedDisplay', class: 'user-Post-Feed-Display'});
+
+	var response = await api.getUserData(id, username);
+	var userData = await response.json();
+
+	/*******************
+	Show user's own posts
+	********************/
+
+	var likeCommentsCount = {
+		'likes': 0,
+		'comments': 0
+	};
+	var promiseArray = new Array ();
+	for(let i = 0; i < userData.posts.length; i++){
+		promiseArray.push(api.getPost(userData.posts[i]));
+	}
+
+
+	Promise.all(promiseArray).then(function(values){
+		renderUserFeed(values,userPostFeed);
+		iteractive(api);
+		calcLikesComments(likeCommentsCount, values);
+		/*******************
+		Show user profile Information
+		********************/
+		var infoBar = createElement('div', `	${userData.username}	|	(p) ${userData.posts.length}	|	(y) ${likeCommentsCount.likes}	|	(c) ${likeCommentsCount.comments}	|	(fu) ${userData.followed_num}	|	(uf) ${userData.following.length}	`,{id:'userProfileInformation', class: 'user-Profile-Information'});
+
+
+		//Add elements to the main Divs
+		appendElement(userProfile, infoBar);
+		appendElement(newPostDiv, userProfile);
+		appendElement(newPostDiv, userPostFeed);
+		appendElement(mainRole, newPostDiv);
+	});
+}
+/**
+ * Takes two arguments an object with likes and comments field and a values array with post objects
+ * updates the likes and comments count
+ */
+function calcLikesComments(likeCommentsCount, values){
+	likeCommentsCount.likes = 0;
+	likeCommentsCount.comments = 0;
+
+	for(let i = 0; i < values.length; i++){
+		likeCommentsCount.likes += values[i].meta.likes.length;
+		likeCommentsCount.likes += values[i].comments.length;
+	}
 }

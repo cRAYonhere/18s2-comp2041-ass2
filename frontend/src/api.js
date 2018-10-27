@@ -26,27 +26,6 @@ export default class API {
         return getJSON(`${this.url}/${path}`);
     }
 
-	/**
-	 *	using an internal token returns user data
-	 */
-	getApiUser(){
-		return fetch(`${API_URL}/user`, {
-			method: 'GET',
-			headers: {
-				'Accept': 'application/json',
-				'Authorization': 'Token '+ TOKEN
-			} })
-			.then(async function(resp) {
-				if(resp.status === 200){
-					var userData = await resp.json();
-					USER_ID = userData.id;
-					return userData;
-				} else {
-					throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token | 404: Post Not Found.';
-				}
-			});
-	}
-
     /**
      * @returns feed array in json format
      */
@@ -57,7 +36,8 @@ export default class API {
 				'accept': 'application/json',
 				'Authorization': 'Token '+TOKEN
 			}
-		}).then(response => {
+		})
+		.then(response => {
 			return response.json();
 		});
     }
@@ -65,7 +45,7 @@ export default class API {
     /**
      * @returns auth'd user in json format
      */
-    postLogin(authObject) {
+	postLogin(authObject) {
 		return fetch(`${API_URL}/auth/login`, {
 			method: 'POST',
 			body: JSON.stringify(authObject),
@@ -223,10 +203,19 @@ export default class API {
 	}
 
 	/**
-	*
+	*	checks for id first, then username
+	* 	if none of them are available token owner's data is returned
 	*/
-	getUserDataByUsername(username){
-		return fetch(`${API_URL}/user/?username=${username}`, {
+	getUserData(id = null, username = null){
+		var payload;
+		if(id !== null){
+			payload = '?id='+id;
+		} else if (username !== null) {
+			payload = '?username='+username;
+		} else {
+			payload = '';
+		}
+		return fetch(`${API_URL}/user/${payload}`, {
 			method: 'GET',
 			headers: {
 				'Accept': 'application/json',
@@ -240,6 +229,7 @@ export default class API {
 				}
 			});
 	}
+
 
 	/**
 	 * @returns auth'd user in json format
