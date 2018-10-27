@@ -228,6 +228,16 @@ footer {
 	border-radius: 5px;
 }
 
+.confirm-post{
+	color: #1ec503;
+	padding: 5px 5px 5px 5px;
+	position: relative;
+	left: 55px;
+	cursor: pointer;
+	font-weight: bold;
+	font-size: 25px;
+}
+
 .post-text-box{
 	color: #1ec503;
 	width: 450px;

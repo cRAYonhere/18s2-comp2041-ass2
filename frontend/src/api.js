@@ -187,57 +187,81 @@ export default class API {
 	/**
 	 *	takes the username as argument and follows the user if he/she exists
 	 */
-	 followUser(username){
-		 return fetch(`${API_URL}/user/follow?username=${username}`, {
-			 method: 'PUT',
-			 headers: {
-				 'Accept': 'application/json',
-				 'Authorization': 'Token '+TOKEN,
-			 } })
-			 .then(function(resp) {
-				 if(resp.status === 200 || resp.status === 404){
-					 return resp.status;
-				 } else {
-					 throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token | 404: User Not Found.';
-				 }
-			 });
-	}
-
-	 /**
- 	 *	takes the username as argument and follows the user if he/she exists
- 	 */
-	 unfollowUser(username){
-		 return fetch(`${API_URL}/user/unfollow?username=${username}`, {
-			 method: 'PUT',
-			 headers: {
-				 'Accept': 'application/json',
-				 'Authorization': 'Token '+TOKEN,
-			 } })
-			 .then(function(resp) {
-				 if(resp.status === 200){
-					 return resp.status;
-				 } else {
-					 throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token';
-				 }
-			 });
+	followUser(username){
+		return fetch(`${API_URL}/user/follow?username=${username}`, {
+			method: 'PUT',
+			headers: {
+				'Accept': 'application/json',
+				'Authorization': 'Token '+TOKEN,
+			} })
+			.then(function(resp) {
+				if(resp.status === 200 || resp.status === 404){
+					return resp.status;
+				} else {
+					throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token | 404: User Not Found.';
+				}
+			});
 	}
 
 	/**
-	 *
+ 	*	takes the username as argument and follows the user if he/she exists
+ 	*/
+	unfollowUser(username){
+		return fetch(`${API_URL}/user/unfollow?username=${username}`, {
+		method: 'PUT',
+		headers: {
+				'Accept': 'application/json',
+				'Authorization': 'Token '+TOKEN,
+			} })
+			.then(function(resp) {
+				if(resp.status === 200){
+					return resp.status;
+				} else {
+					throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token';
+				}
+			});
+	}
+
+	/**
+	*
+	*/
+	getUserDataByUsername(username){
+		return fetch(`${API_URL}/user/?username=${username}`, {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+				'Authorization': 'Token '+ TOKEN
+			} })
+			.then(function(resp) {
+				if(resp.status === 200 || resp.status === 404){
+					return resp;
+				} else {
+					throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token | 404: User Not Found.';
+				}
+			});
+	}
+
+	/**
+	 * @returns auth'd user in json format
 	 */
-	 getUserDataByUsername(username){
-		 return fetch(`${API_URL}/user/?username=${username}`, {
-			 method: 'GET',
-			 headers: {
-				 'Accept': 'application/json',
-				 'Authorization': 'Token '+ TOKEN
-			 } })
-			 .then(function(resp) {
-				 if(resp.status === 200 || resp.status === 404){
-					 return resp;
-				 } else {
-					 throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token | 404: User Not Found.';
-				 }
-			 });
+	postPost(postObject) {
+		var fetchObject = {
+			method: 'POST',
+			headers: {
+				'Accept': 'application/json',
+				'Authorization': 'Token '+ TOKEN,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(postObject)
+		};
+		return fetch(`${API_URL}/post/`, fetchObject)
+		.then(function(resp) {
+			if(resp.status === 200){
+				return resp;
+			} else {
+				throw resp.status + ' 400: Malformed Request / Image could not be processed | 403: Invalid Auth Token';
+			}
+
+		});
 	}
 }

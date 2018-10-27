@@ -59,7 +59,6 @@ export function createPostTile(post) {
 }
 
 
-
 /**
     Reminder about localStorage
     window.localStorage.setItem('AUTH_KEY', someKey);
@@ -128,13 +127,14 @@ function showErrorAfter(ele, msg, id) {
  *	Otherwise returns true;
  */
 function isAnyStringEmpty(list){
-	for(var i = 0; i < list.length; i++){
+	for(let i = 0; i < list.length; i++){
 		if(list[i] === '' || list[i] ==  null) {
 			return i;
 		}
 	}
 	return false;
 }
+
 /***********************************************************
 Login
 ***********************************************************/
@@ -400,6 +400,7 @@ function newEmailCheck(email){
 	var re = /^(([^<>()\[\]\\.,;:\s@']+(\.[^<>()\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 	return re.test(String(email).toLowerCase());
 }
+
 /***********************************************************
 Navigation
 ***********************************************************/
@@ -421,22 +422,19 @@ function navigation(api, parentElement){
 	var followEle = createElement('a', 'Follow', {id: 'followNav', class: 'navigation-elements'});
 	div.appendChild(followEle);
 	appendElement(parentElement, div);
-
+	var main = document.querySelector('main');
 
 	myFeedEle.addEventListener('click', function(event) {
-		var main = document.querySelector('main');
 		updateNavigationBar(1);
 		feed(api, main);
 	});
 
 	newPostEle.addEventListener('click', function(event) {
-		var main = document.querySelector('main');
 		updateNavigationBar(2);
 		newPost(api, main);
 	});
 
 	followEle.addEventListener('click', function(event) {
-		var main = document.querySelector('main');
 		updateNavigationBar(4);
 		follow(api, main);
 	});
@@ -484,7 +482,7 @@ function updateNavigationBar(navElement){
 
 /***********************************************************
 Feed Interface
-**********************main*************************************/
+***********************************************************/
 
 /**
  *
@@ -496,17 +494,18 @@ async function feed(api, mainRole){
 	var mainDiv = createElement('div', null,{id:'userDisplay'});
 	mainDiv.style.backgroundColor = 'black';
 	//const url = 'http://localhost:8080/data/feed.json';
-	//var jsonData = await getData(url);
+	//let jsonData = await getData(url);
 	var p=0;
 	var n=100;
 	var userData = await api.getFeed(p,n);
 
 	//https://stackoverflow.com/questions/41034716/sort-json-data-based-on-date-and-time
+
 	userData.posts.sort(function(a,b){
-		return a-b;
+		return b.meta.published - a.meta.published;
 	});
 
-	for(var i = 0; i < userData.posts.length; i++){
+	for(let i = 0; i < userData.posts.length; i++){
 		let item = createPostTile(userData.posts[i]);
 		appendElement(mainDiv, item);
 	}
@@ -553,7 +552,7 @@ function likePost(api){
 		}
 	};
 
-	for (var i = 0; i < postLikes.length; i++) {
+	for (let i = 0; i < postLikes.length; i++) {
 		postLikes[i].addEventListener('click', likeClick, false);
 	}
 }
@@ -574,7 +573,7 @@ async function updateLikes(postData, attribute){
 function commentPost(api){
 	//https://stackoverflow.com/questions/19655189/javascript-click-event-listener-on-class
 	var showComments = document.getElementsByClassName('post-show-comments');
-	for(var i = 0; i < showComments.length; i++){
+	for(let i = 0; i < showComments.length; i++){
 		var eleId = showComments[i].getAttribute('id');
 		var postId = eleId.match(/^(\d+).+/)[1];
 		var commentInput = createElement('label', null, {for: postId+'-comment-box'});
@@ -585,7 +584,7 @@ function commentPost(api){
 
 	var postNewComment = async function(attribute) {
 		var postId = attribute.match(/^(\d+).+/)[1];
-		var input = document.getElementsByName(postId+'-commentBox')[0].value;
+		let input = document.getElementsByName(postId+'-commentBox')[0].value;
 		/*If comment box is empty, returns*/
 		if(isAnyStringEmpty([input]) !== false){
 			return;
@@ -605,7 +604,7 @@ function commentPost(api){
 	};
 
 	var postComments = document.getElementsByClassName('comment-box');
-	for (var i = 0; i < postComments.length; i++) {
+	for (let i = 0; i < postComments.length; i++) {
 		postComments[i].addEventListener('keyup', function(event) {
 			event.preventDefault();
 			if (event.keyCode === 13) {
@@ -638,15 +637,16 @@ async function updateComments(api, showCommentId, diff){
 	var removeId= Array ();
 	var showNbComments = Math.min(postData.comments.length, Math.max(postComment.length + diff,1));
 
-	for( var i = 0; i < postComment.length; i++){
+	for( let i = 0; i < postComment.length; i++){
 		removeId.push(postComment[i].getAttribute('id'));
 	}
 
-	for( var j = 0; j < removeId.length; j++){
+	for( let j = 0; j < removeId.length; j++){
 		document.getElementById(removeId[j]).remove();
 	}
+
 	var showCommentBtn = document.getElementById(postId+'-post-show-comment')
-	for( var k = 0; k < showNbComments; k++){
+	for( let k = 0; k < showNbComments; k++){
 		showCommentBtn.after(createElement('p', postData.comments[k].author+': '+postData.comments[k].comment, { id:postId+'-post-comment-'+k, class: 'post-comment'}));
 	}
 }
@@ -657,7 +657,7 @@ async function updateComments(api, showCommentId, diff){
 function showComments(api){
 	var showComments = document.getElementsByClassName('post-show-comments');
 
-	for (var i = 0; i < showComments.length; i++) {
+	for (let i = 0; i < showComments.length; i++) {
 		showComments[i].addEventListener('click', function(event) {
 			event.preventDefault();
 			updateComments(api, event.target.id, 3);
@@ -670,7 +670,7 @@ function showComments(api){
 Follow
 ***********************************************************/
 
-/*
+/**
  *
  *	Takes the api as argument
  *	and listes for click event on follow navigation bar
@@ -694,7 +694,10 @@ function follow(api, mainRole){
 
 	searchBtn.addEventListener('click', async function(event) {
 		var userName = document.getElementsByName('followName')[0].value;
-		if (userName !== USER_DATA.username){
+		if(isAnyStringEmpty([userName]) !== false){
+			showErrorAfter(placeHolderText,'Please enter a username.', 'followError');
+		}
+		else if (userName !== USER_DATA.username){
 			var srchResponse = await api.getUserDataByUsername(userName);
 			if(srchResponse.status === 200 ){
 				USER_DATA = await api.getApiUser();
@@ -735,11 +738,13 @@ function follow(api, mainRole){
 /***********************************************************
 New Post
 ***********************************************************/
-
+/**
+ * @arg api
+ * @arg mainRole
+ * creates and manges upload div
+ */
 function newPost(api, mainRole){
 	var newPostDiv = createElement('div', null,{id:'userDisplay', class: 'uploadImageClass'});
-
-
 
 	//Official Name
 	var postDesc = createElement('label', null, {for:'postDescription'});
@@ -750,7 +755,7 @@ function newPost(api, mainRole){
 	appendElement(newPostDiv, descriptionElement);
 
 	var upImage = createElement('input', null, {class: 'upload-file', id: 'uploadPost', type: 'file', name: 'uploadImageFile', require:true});
-	var submitBtn = createElement('p', '| submit |', {class: 'submit-file', id: 'submitBtn', class: 'submit-Btn'});
+	var submitBtn = createElement('p', '| submit |', {id: 'submitBtn', class: 'submit-Btn'});
 	appendElement(newPostDiv, upImage);
 	appendElement(newPostDiv, submitBtn);
 	appendElement(mainRole, newPostDiv);
@@ -758,21 +763,73 @@ function newPost(api, mainRole){
 	newPostDiv.appendChild(createElement('img', null,{ id:'post-image', src: '#', class: 'post-image', style:'display:none;'}));
 	newPostDiv.appendChild(createElement('p', null,{ id:'post-description', class: 'post-text-box', style:'display:none;'}));
 
-	var image = submitBtn.addEventListener('click', function() {
-		var desc = document.getElementById('post-description');
-		desc.style.display='block';
-		desc.innerHTML = document.getElementsByName('description')[0].value;
-		var imageRaw = document.getElementsByName('uploadImageFile')[0].files;
-		if (imageRaw && imageRaw[0]) {
-          	var img = document.querySelector('img');  // $('img')[0]
-		  	img.style.display='block';
-          	img.src = URL.createObjectURL(imageRaw[0]); // set src to file url
-          	img.onload = confirmNupload(newPostDiv); // optional onload event listener
-      }
+	submitBtn.addEventListener('click', function() {
+
+		var descElement = document.getElementById('post-description');
+		var post_desc = document.getElementsByName('description')[0].value;
+		let imageRaw = document.getElementsByName('uploadImageFile')[0].files;
+
+		if (imageRaw && imageRaw[0] && isAnyStringEmpty([post_desc]) === false) {
+			var errorNewPost = document.getElementById('errorNewPost');
+
+			if(errorNewPost){
+				document.getElementById('errorNewPost').remove();
+			}
+
+			//https://stackoverflow.com/questions/22172604/convert-image-url-to-base64/22172860
+			//https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
+			const reader = new FileReader();
+
+			reader.addEventListener('load', function () {
+				var base64Img = reader.result;
+				var pngRE = /data:image\/png;base64,(.+)/;
+				var base64Encoding = pngRE.exec(base64Img);
+				if(base64Encoding === null){
+					showErrorAfter(upImage, 'Incorrect Image format.', 'errorNewPost');
+				} else {
+					descElement.style.display='block';
+					descElement.innerHTML = post_desc;
+					let img = document.querySelector('img');  // $('img')[0]
+					img.style.display='block';
+					img.src = URL.createObjectURL(imageRaw[0]);
+					confirmNupload(api, newPostDiv, {
+							'description_text' : post_desc,
+							'src': base64Encoding[1]
+					});
+				}
+
+			}, false);
+
+			reader.readAsDataURL(imageRaw[0]);
+		} else {
+			showErrorAfter(upImage, 'Please add Description and Image.', 'errorNewPost');
+		}
 	});
 
 }
 
-function confirmNupload(newPostDiv){
-	newPostDiv.appendChild(createElement('p', null,{ id:'post-description', class: 'post-text-box', style:'display:none;'}));
+/**
+ *
+ *	Confirms if the user wants to continue with upload
+ */
+function confirmNupload(api, newPostDiv,postObject){
+	var confirmSubmission = createElement('p', 'POST',{ id:'confirm-post-submission', class: 'confirm-post'});
+	newPostDiv.appendChild(confirmSubmission);
+
+	confirmSubmission.addEventListener('click', async function() {
+		var errorNewPost = document.getElementById('errorNewPost');
+		if(errorNewPost){
+			document.getElementById('errorNewPost').remove();
+		}
+		var resp = await api.postPost(postObject);
+		if (resp.status === 200){
+			//var postId = await resp.json();
+			//console.log(postId);
+			alert('Post Uploaded');
+			document.getElementById('userDisplay').remove();
+			newPost(api, document.querySelector('main'));
+		} else {
+			showErrorAfter(confirmSubmission, 'Please add Description and Image.', 'errorNewPost');
+		}
+	});
 }
