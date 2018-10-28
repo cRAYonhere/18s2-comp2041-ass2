@@ -287,6 +287,7 @@ async function registrationSubmitBtnClicked(api){
 		}
 	}
 }
+
 /**
  * Takes a element and options
  * If regBtn is found then it's visibility is changed to inline
@@ -442,6 +443,8 @@ function navigation(api, parentElement){
 		updateNavigationBar(3);
 		await showProfile(api, main);
 		editDelete(api, main);
+		await following(api);
+
 	});
 
 	followEle.addEventListener('click', function(event) {
@@ -771,6 +774,7 @@ function follow(api, mainRole){
 /***********************************************************
 New Post
 ***********************************************************/
+
 /**
  * @arg api
  * @arg mainRole
@@ -984,13 +988,19 @@ function otherUsersProfile(api, main){
 /***********************************************************
 Ability to Edit or Delete Profile elements
 ***********************************************************/
-
+/**
+ *	calls editProfile and editPost functions
+ */
 function editDelete(api, main){
 	editProfile(api, main);
 	editPost(api, main);
 }
 
 //Edit profile
+
+/**
+ *	Adds edit profile button to top of my profile and listens for a click event
+ */
 function editProfile(api, main){
 	var userProfileDisplay = document.getElementById('userProfileDisplay');
 	var editProfileBtn = createElement('p', 'Edit Profile',{id:'editProfile', class: 'edit-profile-btn'});
@@ -1033,6 +1043,9 @@ function editProfile(api, main){
 	editProfileBtn.addEventListener('click',editProfileDetails,false);
 }
 
+/**
+ *	Takes an array of values from input fiels and populates object for api post
+ */
 function createChangeObject(values){
 	var changeFlag = 0;
 	var holdFlag = 0;
@@ -1078,13 +1091,16 @@ function createChangeObject(values){
 	return [changeObject, changeFlag];
 }
 
+/**
+ *	Create form for profile update
+ */
 function populateChangeFields(updateProfileDiv){
 
 	//console.log(USER_DATA);
 
 	var changeName = createElement('label', 'New Name', {for:'changeName'});
 	changeName.style.fontWeight = 'bold';
-	var inputName = createElement('input', null, {class: 'change-field', id: 'changeName', type: 'text', placeholder:USER_DATA.username});
+	var inputName = createElement('input', null, {class: 'change-field', id: 'changeName', type: 'text', placeholder:USER_DATA.name});
 	appendElement(updateProfileDiv, changeName);
 	appendElement(updateProfileDiv, inputName);
 
@@ -1107,6 +1123,9 @@ function populateChangeFields(updateProfileDiv){
 	appendElement(updateProfileDiv, inputPasswordConfirmation);
 }
 
+/**
+ *	Extracts values from the form created by populateChangeFields
+ */
 function extractValueFromChangeFields(){
 	return {	'officialName': document.getElementById('changeName').value,
 				'email': document.getElementById('changeEmail').value,
@@ -1116,6 +1135,10 @@ function extractValueFromChangeFields(){
 }
 
 //Edit Posts
+
+/**
+ *	Adds edit post button to all user posts and listens for click event
+ */
 function editPost(api, main){
 	var postPublished = document.getElementsByClassName('post-published');
 
@@ -1149,6 +1172,10 @@ function editPost(api, main){
 	}
 }
 
+/**
+ *	Creates form elements for update post and delete post
+ *	listens for click event on those elements
+ */
 function updatePost(api, mainRole, postId){
 	var centerDiv = createElement('div', null,{id:'centerDivNewPost', class: 'center-div'});
 
@@ -1268,6 +1295,9 @@ function updatePost(api, mainRole, postId){
 
 }
 
+/**
+ *	When post update event is triggered contacts api to make changes
+ */
 async function postUpdateClicked(object) {
 	var displayPostBtn = document.getElementById('confirmPostUpdate');
 
@@ -1292,7 +1322,7 @@ async function postUpdateClicked(object) {
 
 /**
  *
- *	Confirms if the user wants to continue with upload
+ *	Confirms if the user wants to continue with update
  */
 function confirmNupdate(api, postObject, postId){
 	var displayPostBtn = document.getElementById('confirmPostUpdate');
@@ -1306,4 +1336,30 @@ function confirmNupdate(api, postObject, postId){
 
 	//https://toddmotto.com/avoiding-anonymous-javascript-functions/
 	displayPostBtn.addEventListener('click', postUpdateClicked.bind(null, object));
+}
+
+/*********************************************************
+Following
+*********************************************************/
+
+function following(api){
+	return new Promise( async (resolve)=>{
+		let response = await api.getUserData();
+		USER_DATA = await response.json();
+		//console.log(USER_DATA);
+		//https://www.quackit.com/html/codes/html_scroll_box.cfm
+		var scrollBoxContainer = createElement('div', null, {id: 'scrollBoxContainerID', class: 'scrollBoxContainer'});
+		var scrollBox = createElement('div', null, {id: 'scrollBoxFollowing', class: 'scrollBox'});
+		var userProfileDisplay = document.getElementById('userProfileDisplay');
+
+		for( let i = 0; i < USER_DATA.following.length; i++){
+			let response = await api.getUserData(USER_DATA.following[i],null);
+			var following_user_data = await response.json();
+			var following_user_element = createElement('li', following_user_data.username, {id: 'following-'+USER_DATA.following[i], class: 'following-user'});
+			appendElement(scrollBox,following_user_element);
+
+		}
+		appendElement(scrollBoxContainer,scrollBox);
+		userProfileDisplay.after(scrollBoxContainer);
+	});
 }

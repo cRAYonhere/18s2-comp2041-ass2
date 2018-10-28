@@ -256,7 +256,9 @@ export default class API {
 	}
 
 	/**
-	 *
+	 *	for updating user profile
+	 *	Takes an object of user profile details
+	 * 	and sends it to the backed
 	 */
 	putProfileUpdate(updateObject){
 		return fetch(`${API_URL}/user/`, {
@@ -276,7 +278,11 @@ export default class API {
 			});
 	}
 
-
+	/**
+	 *	for updating post
+	 *	takes an object of post details
+	 *  and sends it to the backend
+	 */
 	putUpdatePost(id, postObject){
 		return fetch(`${API_URL}/post/?id=${id}`, {
 			method: 'PUT',
@@ -295,6 +301,9 @@ export default class API {
 			});
 	}
 
+	/**
+	 * Takes an id and deletes the post
+	 */
 	deleteUpdatePost(id){
 		return fetch(`${API_URL}/post/?id=${id}`, {
 			method: 'delete',

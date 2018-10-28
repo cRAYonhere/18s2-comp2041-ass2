@@ -18,7 +18,7 @@ html, body {
     padding: 10px;
     background-color:center align upload htmlwhite;
     min-height: 60px;
-    border-bottom: 1px solid rgba(0,0,0,.0975);
+    border-bottom: 1px solid #1ec503rgba(0,0,0,.0975);
 }
 
 
@@ -193,6 +193,19 @@ footer {
 	cursor: pointer;
 	font-weight: bold;
 	font-size: 20px;
+}
+
+.scrollBox{
+	height:120px;
+	width:300px;
+	border:1px solid #1ec503;
+	font:16px/26px Georgia, Garamond, Serif;
+	overflow:auto;
+	align-items: center;
+	padding: 5px 5px 5px 5px;
+}
+.scrollBoxContainer{
+	text-align: center;
 }
 .user-Profile-Display{
 	text-align: center;
