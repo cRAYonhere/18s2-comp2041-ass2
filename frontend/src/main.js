@@ -6,15 +6,12 @@ import API from './api.js';
 
 const api  = new API();
 
-document.body.style.backgroundColor = 'black';
+//document.body.style.backgroundColor = 'black';
 
+//https://stackoverflow.com/questions/1702559/ascii-art-in-html
 var bannerClass = document.querySelector('.banner');
 bannerClass.style = 'align-items: center; justify-content: center';
-bannerClass.style.backgroundColor = 'black';
-
-var h1Elements = document.getElementsByTagName('h1');
-h1Elements[0].style.color='#1ec503';
-
+//bannerClass.style.backgroundColor = 'black';
 
 // we can use this single api request multiple times
 //const feed = api.getFeed();
@@ -23,22 +20,3 @@ var mainRole = document.querySelector('main');
 
 helper.addLogin(api, mainRole, {class:'loginContainer', id:'frontpageUnamePass'});
 helper.addRegistration(api, mainRole, {class:'formContainer', id:'frontpageRegistration', style:'background-color:black;'});
-/*
-feed
-.then(posts => {
-    posts.reduce((parent, post) => {
-
-        parent.appendChild(createPostTile(post));
-
-        return parent;
-
-    }, document.getElementById('large-feed'))
-});
-
-
-
-// Potential example to upload an image
-const input = document.querySelector('input[type='file']');
-
-input.addEventListener('change', uploadImage);
-*/

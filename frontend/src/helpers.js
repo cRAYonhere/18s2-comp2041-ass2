@@ -925,8 +925,9 @@ function calcLikesComments(likeCommentsCount, values){
 	likeCommentsCount.comments = 0;
 
 	for(let i = 0; i < values.length; i++){
+
 		likeCommentsCount.likes += values[i].meta.likes.length;
-		likeCommentsCount.likes += values[i].comments.length;
+		likeCommentsCount.comments += values[i].comments.length;
 	}
 }
 

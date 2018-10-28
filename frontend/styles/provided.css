@@ -21,6 +21,7 @@ html, body {
     border-bottom: 1px solid rgba(0,0,0,.0975);
 }
 
+
 footer {
     border-top: 1px solid rgba(0,0,0,.0975);
     padding: 10px;
@@ -245,6 +246,7 @@ footer {
     background-color: black;
 	text-align:center;
 }
+
 .edit-post{
 	display: inline-block;
 	padding: 0px 0px 0px 20px;
