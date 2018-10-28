@@ -1,5 +1,6 @@
 
 var USER_DATA;
+
 /* returns an empty array of size max */
 export const range = (max) => Array(max).fill(null);
 
@@ -233,11 +234,11 @@ function checkCredentials(api, credential){
 /**
  *	Removes the loginDiv and adds user page
  */
-function loggedIn(api, parentElement){
+function loggedIn(api, main){
 	//removes the loginDiv
 	document.getElementById('frontpageUnamePass').remove();
-	navigation(api, parentElement);
-	feed(api, parentElement);
+	navigation(api, main);
+	feed(api, main);
 }
 
 /***********************************************************
@@ -434,9 +435,10 @@ function navigation(api, parentElement){
 		newPost(api, main);
 	});
 
-	myProfileEle.addEventListener('click', function(event) {
+	myProfileEle.addEventListener('click', async function(event) {
 		updateNavigationBar(3);
-		showProfile(api, main);
+		await showProfile(api, main);
+		editDelete(api, main);
 	});
 
 	followEle.addEventListener('click', function(event) {
@@ -444,6 +446,7 @@ function navigation(api, parentElement){
 		follow(api, main);
 	});
 }
+
 /*
  *	Takes a newElement number(1,2,3,4) and updates the corresponding
  * 	nav element as active and deactivates the others
@@ -495,20 +498,18 @@ Feed Interface
  *	calls renderUserFeed with array of post objects
  *	calls iteractive to enable like and comments
  */
-
-async function feed(api, mainRole){
+async function feed(api, main){
 	var response = await api.getUserData();
 	USER_DATA = await response.json();
-	var mainDiv = createElement('div', null,{id:'userDisplay'});
-
+	var userDisplay = createElement('div', null,{id:'userDisplay'});
+	appendElement(main, userDisplay);
 	// XXX implement pagination, infinite scroll
 	var p=0;
 	var n=100;
 	var userData = await api.getFeed(p,n);
-	renderUserFeed(userData.posts, mainDiv);
-	appendElement(mainRole, mainDiv);
-
+	renderUserFeed(userData.posts, userDisplay);
 	iteractive(api);
+	otherUsersProfile(api, main);
 }
 
 /**
@@ -693,17 +694,18 @@ Follow
 function follow(api, mainRole){
 
 	var followDiv = createElement('div', null,{id:'userDisplay'});
-
+	var centerDiv = createElement('div', null,{id:'centerDisplayFollowDiv', class: 'center-div'});
 	//Search username
 	var followUser = createElement('label', null, {for:'followUsername'});
 	followUser.innerHTML=boldStatement('Follow User');
 	greenText(followUser);
 	var placeHolderText = createElement('input', null, {class: 'followUserInput', id: 'followUsername', type: 'text', placeholder:'Username', name: 'followName', require:true});
-	appendElement(followDiv, followUser);
-	appendElement(followDiv, placeHolderText);
+	appendElement(centerDiv, followUser);
+	appendElement(centerDiv, placeHolderText);
 
 	var searchBtn = createElement('p', '| Search |', {id: 'searchUsernameBtn', class: 'search-Username-Btn'});
-	appendElement(followDiv, searchBtn);
+	appendElement(centerDiv, searchBtn);
+	appendElement(followDiv, centerDiv);
 	appendElement(mainRole, followDiv);
 
 	searchBtn.addEventListener('click', async function(event) {
@@ -727,9 +729,9 @@ function follow(api, mainRole){
 				//IF user is already following the username give an option to Unfollow, else give an option to follow
 				if(USER_DATA.following.includes(srchData.id) === true){
 					var confirmUnfollow = createElement('p', 'Unfollow '+userName, {id: 'unfollowConfirmation', class: 'followConfirmation-Btn'});
-					appendElement(followDiv, confirmUnfollow);
+					appendElement(centerDiv, confirmUnfollow);
 					confirmUnfollow.addEventListener('click', async function(event) {
-						var response = await api.unfollowUser(userName);
+						var response = await api.putUnfollowUser(userName);
 						if (response === 200){
 							document.getElementById('unfollowConfirmation').innerHTML = 'Unfollowed '+userName;
 						}
@@ -739,10 +741,10 @@ function follow(api, mainRole){
 					//var confirmfollow = document.getElementById('followConfirmation');
 					//if(confirmfollow == null){
 						var confirmfollow = createElement('p', 'Follow '+userName, {id: 'followConfirmation', class: 'followConfirmation-Btn'});
-						appendElement(followDiv, confirmfollow);
+						appendElement(centerDiv, confirmfollow);
 					//}
 					confirmfollow.addEventListener('click', async function(event) {
-						var response = await api.followUser(userName);
+						var response = await api.putFollowUser(userName);
 						if (response === 200){
 							document.getElementById('followConfirmation').innerHTML = 'Following '+userName;
 						}
@@ -769,24 +771,26 @@ New Post
  * creates and manges upload div
  */
 function newPost(api, mainRole){
-	var newPostDiv = createElement('div', null,{id:'userDisplay', class: 'uploadImageClass'});
+	var newPostDiv = createElement('div', null,{id:'userDisplay', class: 'uploadNewPost'});
+	var centerDiv = createElement('div', null,{id:'centerDivNewPost', class: 'center-div'});
 
-	//Official Name
-	var postDesc = createElement('label', null, {for:'postDescription'});
-	postDesc.innerHTML=boldStatement('Description');
-	greenText(postDesc);
+
+	var postDesc = createElement('label', 'Description', {for:'postDescription'});
+	postDesc.style.fontWeight = 'bold';
 	var descriptionElement = createElement('input', null, {class: 'description-field', id: 'postDescription', type: 'text', placeholder:'Add your description here', name: 'description', require:true});
-	appendElement(newPostDiv, postDesc);
-	appendElement(newPostDiv, descriptionElement);
+	appendElement(centerDiv, postDesc);
+	appendElement(centerDiv, descriptionElement);
 
 	var upImage = createElement('input', null, {class: 'upload-file', id: 'uploadPost', type: 'file', name: 'uploadImageFile', require:true});
 	var submitBtn = createElement('p', '| submit |', {id: 'submitNewPostBtn', class: 'submit-Btn'});
-	appendElement(newPostDiv, upImage);
-	appendElement(newPostDiv, submitBtn);
+	appendElement(centerDiv, upImage);
+	appendElement(centerDiv, submitBtn);
+	appendElement(newPostDiv, centerDiv);
 	appendElement(mainRole, newPostDiv);
 
-	newPostDiv.appendChild(createElement('img', null,{ id:'post-image', src: '#', class: 'post-image', style:'display:none;'}));
-	newPostDiv.appendChild(createElement('p', null,{ id:'post-description', class: 'post-text-box', style:'display:none;'}));
+	centerDiv.appendChild(createElement('img', null,{ id:'post-image', src: '#', class: 'post-image', style:'display:none;'}));
+	centerDiv.appendChild(createElement('p', null,{ id:'post-description', class: 'post-text-box', style:'display:none;'}));
+	centerDiv.appendChild(createElement('p', 'POST',{ id:'confirm-post-submission', class: 'confirm-post', style:'display:none;'}));
 
 	submitBtn.addEventListener('click', function() {
 
@@ -817,7 +821,7 @@ function newPost(api, mainRole){
 					let img = document.querySelector('img');  // $('img')[0]
 					img.style.display='block';
 					img.src = URL.createObjectURL(imageRaw[0]);
-					confirmNupload(api, newPostDiv, {
+					confirmNupload(api, {
 							'description_text' : post_desc,
 							'src': base64Encoding[1]
 					});
@@ -836,11 +840,10 @@ function newPost(api, mainRole){
  *
  *	Confirms if the user wants to continue with upload
  */
-function confirmNupload(api, newPostDiv,postObject){
-	var confirmSubmission = createElement('p', 'POST',{ id:'confirm-post-submission', class: 'confirm-post'});
-	newPostDiv.appendChild(confirmSubmission);
-
-	confirmSubmission.addEventListener('click', async function() {
+function confirmNupload(api, postObject){
+	var displayPostBtn = document.getElementById('confirm-post-submission');
+	displayPostBtn.style.display = '';
+	displayPostBtn.addEventListener('click', async function() {
 		var errorNewPost = document.getElementById('errorNewPost');
 		if(errorNewPost){
 			document.getElementById('errorNewPost').remove();
@@ -851,7 +854,7 @@ function confirmNupload(api, newPostDiv,postObject){
 			document.getElementById('userDisplay').remove();
 			newPost(api, document.querySelector('main'));
 		} else {
-			showErrorAfter(confirmSubmission, 'Please add Description and Image.', 'errorNewPost');
+			showErrorAfter(displayPostBtn, 'Image Could Not Be processed. Try Again.', 'errorNewPost');
 		}
 	});
 }
@@ -860,46 +863,59 @@ function confirmNupload(api, newPostDiv,postObject){
 Show Profile
 ***********************************************************/
 
-async function showProfile(api, mainRole, id = null, username = null){
+/**
+ *	Takes 4 arguments an api object, mainRole and id, username
+ *	and generates profile detail along with all posts
+ */
+function showProfile(api, mainRole, id = null, username = null){
+	return new Promise( async (resolve)=>{
+		var newPostDiv = createElement('div', null,{id:'userDisplay', class: 'showProfile'});
+		var userProfile = createElement('div', null,{id:'userProfileDisplay', class: 'user-Profile-Display'});
+		var userPostFeed = createElement('div', null,{id:'userPostFeedDisplay', class: 'user-Post-Feed-Display'});
 
-	var newPostDiv = createElement('div', null,{id:'userDisplay', class: 'uploadImageClass'});
-	var userProfile = createElement('div', null,{id:'userProfileDisplay', class: 'user-Profile-Display'});
-	var userPostFeed = createElement('div', null,{id:'userPostFeedDisplay', class: 'user-Post-Feed-Display'});
-
-	var response = await api.getUserData(id, username);
-	var userData = await response.json();
-
-	/*******************
-	Show user's own posts
-	********************/
-
-	var likeCommentsCount = {
-		'likes': 0,
-		'comments': 0
-	};
-	var promiseArray = new Array ();
-	for(let i = 0; i < userData.posts.length; i++){
-		promiseArray.push(api.getPost(userData.posts[i]));
-	}
-
-
-	Promise.all(promiseArray).then(function(values){
-		renderUserFeed(values,userPostFeed);
-		iteractive(api);
-		calcLikesComments(likeCommentsCount, values);
-		/*******************
-		Show user profile Information
-		********************/
-		var infoBar = createElement('div', `	${userData.username}	|	(p) ${userData.posts.length}	|	(y) ${likeCommentsCount.likes}	|	(c) ${likeCommentsCount.comments}	|	(fu) ${userData.followed_num}	|	(uf) ${userData.following.length}	`,{id:'userProfileInformation', class: 'user-Profile-Information'});
-
-
-		//Add elements to the main Divs
-		appendElement(userProfile, infoBar);
 		appendElement(newPostDiv, userProfile);
 		appendElement(newPostDiv, userPostFeed);
 		appendElement(mainRole, newPostDiv);
+
+		var response = await api.getUserData(id, username);
+		var userData = await response.json();
+
+		/*******************
+		Show user's own posts
+		********************/
+
+		var likeCommentsCount = {
+			'likes': 0,
+			'comments': 0
+		};
+		var promiseArray = new Array ();
+		for(let i = 0; i < userData.posts.length; i++){
+			promiseArray.push(api.getPost(userData.posts[i]));
+		}
+
+
+		Promise.all(promiseArray).then(function(values){
+			renderUserFeed(values,userPostFeed);
+			iteractive(api);
+			calcLikesComments(likeCommentsCount, values);
+			/*****************************
+			Show user profile Information
+			******************************/
+			var followName = '';
+			if(id == null && username == null){
+				followName = 'u';
+			} else {
+				followName = userData.username.substring(0,1);
+			}
+			var infoBar = createElement('div', `${userData.username}\t\t|\t\t(p) ${userData.posts.length}\t\t|\t\t(y) ${likeCommentsCount.likes}\t\t|\t\t(c) ${likeCommentsCount.comments}\t\t|\t\t(->${followName}) ${userData.followed_num}\t\t|\t\t(${followName}->) ${userData.following.length}`,{id:'userProfileInformation', class: 'user-Profile-Information'});
+
+			//Add infoBar to userProfile
+			appendElement(userProfile, infoBar);
+			resolve(true);
+		});
 	});
 }
+
 /**
  * Takes two arguments an object with likes and comments field and a values array with post objects
  * updates the likes and comments count
@@ -911,5 +927,181 @@ function calcLikesComments(likeCommentsCount, values){
 	for(let i = 0; i < values.length; i++){
 		likeCommentsCount.likes += values[i].meta.likes.length;
 		likeCommentsCount.likes += values[i].comments.length;
+	}
+}
+
+
+/***********************************************************
+Visit Other's Profile by Feed Username
+***********************************************************/
+
+/**
+ *	Takes api object and mainRole
+ *	listens for click event on all username on Feed
+ *	fetches the user data for username and displays on Profile tab
+ */
+function otherUsersProfile(api, main){
+	var userNames = document.getElementsByClassName('post-title');
+	function getUserProfile(event){
+		var username = event.target.innerHTML;
+		var myProfileNav = document.getElementById('myProfileNav');
+		myProfileNav.innerHTML = '->'+'Profile'+'<-';
+		document.getElementById('userDisplay').remove();
+		showProfile(api, main, null, username);
+	}
+	for(let i = 0; i < userNames.length; i++){
+		userNames[i].addEventListener('click',getUserProfile,false);
+	}
+}
+
+/***********************************************************
+Ability to Edit or Delete Profile elements
+***********************************************************/
+
+function editDelete(api, main){
+	editProfile(api, main);
+	editPost(api, main);
+}
+
+//Edit profile
+function editProfile(api, main){
+	var userProfileDisplay = document.getElementById('userProfileDisplay');
+	var editProfileBtn = createElement('p', 'Edit Profile',{id:'editProfile', class: 'edit-profile-btn'});
+	editProfileBtn.style.fontWeight = 'bold';
+	appendElement(userProfileDisplay, editProfileBtn);
+	//console.log(userProfileDisplay);
+
+	function editProfileDetails(event){
+		var newPostNav = document.getElementById('myProfileNav');
+		newPostNav.innerHTML = '->'+'Edit Profile'+'<-';
+		document.getElementById('userDisplay').remove();
+		var updateProfileDiv = createElement('div', null,{id:'userDisplay', class: 'updateProfile'});
+		var submitBtn = createElement('p', '| submit |', {id: 'submitchangeOrderBtn', class: 'submit-Btn'});
+
+		populateChangeFields(updateProfileDiv);
+
+		appendElement(updateProfileDiv, submitBtn);
+		appendElement(main, updateProfileDiv);
+
+
+
+		submitBtn.addEventListener('click', function(){
+			var inputValues = extractValueFromChangeFields();
+			var changeObject = createChangeObject(inputValues);
+			//console.log(changeObject);
+			if(changeObject[1] === 1){
+				api.putProfileUpdate(changeObject[0]);
+			} else if(changeObject[1] === 2){
+				// Do nothing
+			}
+			else {
+				showErrorAfter(document.getElementById('confirmChangePassword'),'Provide Input for the field of your choice.','updateProfile');
+			}
+		});
+	}
+
+	editProfileBtn.addEventListener('click',editProfileDetails,false);
+}
+
+function createChangeObject(values){
+	var changeFlag = 0;
+	var holdFlag = 0;
+	var changeObject = {};
+	if(values.email != '' && values.email != null){
+		changeFlag = 1;
+		if(newEmailCheck(values.email)){
+			changeObject['email'] = values.email;
+		} else {
+			holdFlag = 1;
+			showErrorAfter(document.getElementById('confirmChangePassword'),'Incorrect Email Format.','updateProfile');
+		}
+
+	}
+
+	//Update name
+	if(values.officialName != '' && values.officialName != null && holdFlag === 0){
+		changeFlag = 1;
+		changeObject['name'] = values.officialName;
+	}
+
+	//Update password
+	if(isAnyStringEmpty([values.newPassword, values.confirmPassword]) === false && holdFlag === 0){
+		if(values.newPassword === values.confirmPassword){
+			changeFlag = 1;
+			changeObject['password'] = values.confirmPassword;
+		} else {
+			holdFlag = 1;
+			showErrorAfter(document.getElementById('confirmChangePassword'),'Passwords Do Not Match','updateProfile');
+		}
+	}
+	if(holdFlag === 1){
+		changeFlag = 2;
+	}
+	return [changeObject, changeFlag];
+}
+
+function populateChangeFields(updateProfileDiv){
+	var changeName = createElement('label', 'New Name', {for:'changeName'});
+	changeName.style.fontWeight = 'bold';
+	var inputName = createElement('input', null, {class: 'change-field', id: 'changeName', type: 'text', placeholder:'Enter New Name'});
+	appendElement(updateProfileDiv, changeName);
+	appendElement(updateProfileDiv, inputName);
+
+	var changeEmail = createElement('label', 'New Email Address', {for:'changeEmail'});
+	changeEmail.style.fontWeight = 'bold';
+	var inputEmail = createElement('input', null, {class: 'change-field', id: 'changeEmail', type: 'email', placeholder:' Enter New Email Address'});
+	appendElement(updateProfileDiv, changeEmail);
+	appendElement(updateProfileDiv, inputEmail);
+
+	var changePassword = createElement('label', 'Enter New Password', {for:'changePassword'});
+	changePassword.style.fontWeight = 'bold';
+	var inputPassword = createElement('input', null, {class: 'change-field', id: 'changePassword', type: 'password', placeholder:'Enter New Passowrd'});
+	appendElement(updateProfileDiv, changePassword);
+	appendElement(updateProfileDiv, inputPassword);
+
+	var confirmPasswordChange = createElement('label', 'Confirm New Password', {for:'confirmPasswordChange'});
+	confirmPasswordChange.style.fontWeight = 'bold';
+	var inputPasswordConfirmation = createElement('input', null, {class: 'change-field', id: 'confirmChangePassword', type: 'password', placeholder:'Confirm Password'});
+	appendElement(updateProfileDiv, confirmPasswordChange);
+	appendElement(updateProfileDiv, inputPasswordConfirmation);
+}
+
+function extractValueFromChangeFields(){
+	return {	'officialName': document.getElementById('changeName').value,
+				'email': document.getElementById('changeEmail').value,
+				'newPassword': document.getElementById('changePassword').value,
+				'confirmPassword': document.getElementById('confirmChangePassword').value
+			};
+}
+
+//Edit Posts
+function editPost(api, main){
+	var postPublished = document.getElementsByClassName('post-published');
+
+	for(let i = 0; i < postPublished.length; i++){
+		var publishId = postPublished[i].getAttribute('id');
+		var postId = publishId.match(/^(\d+).+/)[1];
+		var editPostEle = createElement('p', 'Edit Post',{id:postId+'editPost', class: 'edit-post'});
+		postPublished[i].after(editPostEle);
+
+	}
+
+	var editPostsElement = document.getElementsByClassName('edit-post');
+
+	function editPostEvent(event){
+
+		var editPostId = event.target.id;
+		var postId = editPostId.match(/^(\d+).+/)[1];
+		var newPostNav = document.getElementById('newPostNav');
+		newPostNav.innerHTML = '->'+'Edit Post'+'<-';
+		document.getElementById('userDisplay').remove();
+		var newPostDiv = createElement('div', null,{id:'userDisplay', class: 'editPost'});
+		appendElement(main, newPostDiv);
+
+		// XXX create new display div for update or delete post
+	}
+
+	for(let i = 0; i < editPostsElement.length; i++) {
+		editPostsElement[i].addEventListener('click',editPostEvent,false);
 	}
 }

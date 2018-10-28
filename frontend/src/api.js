@@ -167,7 +167,7 @@ export default class API {
 	/**
 	 *	takes the username as argument and follows the user if he/she exists
 	 */
-	followUser(username){
+	putFollowUser(username){
 		return fetch(`${API_URL}/user/follow?username=${username}`, {
 			method: 'PUT',
 			headers: {
@@ -186,7 +186,7 @@ export default class API {
 	/**
  	*	takes the username as argument and follows the user if he/she exists
  	*/
-	unfollowUser(username){
+	putUnfollowUser(username){
 		return fetch(`${API_URL}/user/unfollow?username=${username}`, {
 		method: 'PUT',
 		headers: {
@@ -246,12 +246,33 @@ export default class API {
 		};
 		return fetch(`${API_URL}/post/`, fetchObject)
 		.then(function(resp) {
-			if(resp.status === 200){
+			if(resp.status === 200 || resp.status == 400){
 				return resp;
 			} else {
 				throw resp.status + ' 400: Malformed Request / Image could not be processed | 403: Invalid Auth Token';
 			}
 
 		});
+	}
+
+	/**
+	 *
+	 */
+	putProfileUpdate(updateObject){
+		return fetch(`${API_URL}/user/`, {
+			method: 'PUT',
+			body: JSON.stringify(updateObject),
+			headers: {
+				'Accept': 'application/json',
+				'Authorization': 'Token '+TOKEN,
+				'Content-Type': 'application/json'
+			} })
+			.then(function(resp) {
+				if(resp.status === 200){
+					return resp;
+				} else {
+					throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token';
+				}
+			});
 	}
 }
