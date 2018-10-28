@@ -21,4 +21,5 @@
 27/10/18		18:30	 22:00	 Subset 3 Show user profiles
 27/10/18		10:15	 13:00	 Subset 3 Bug fixes
 27/10/18		13:00	 16:30	 Subset 3 Update Profile
-27/10/18		16:30	 18:00	 Subset 3 Update Post
+27/10/18		16:30	 19:00	 Subset 3 Update/Delete Posts
+27/10/18		19:30	 22:00	 Bug Fixes

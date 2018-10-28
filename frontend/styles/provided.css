@@ -176,8 +176,6 @@ footer {
 
 .followConfirmation-Btn{
 	padding: 5px 5px 5px 5px;
-	position: relative;
-	left: 55px;
 	cursor: pointer;
 	font-weight: bold;
 	font-size: 25px;
@@ -219,7 +217,7 @@ footer {
 	border-radius: 5px;
 }
 
-.confirm-post{
+.confirm-post, .confirm-delete-post{
 	padding: 5px 5px 5px 5px;
 	cursor: pointer;
 	font-weight: bold;

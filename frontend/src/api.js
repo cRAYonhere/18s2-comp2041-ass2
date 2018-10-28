@@ -76,13 +76,13 @@ export default class API {
 				'Content-Type': 'application/json'
 			} })
 			.then(async function(resp) {
-				var tokenObject = await resp.json();
-				if(resp.status === 200){
+				if(resp.status === 200 || resp.status === 409){
+					var tokenObject = await resp.json();
 					TOKEN = tokenObject.token;
+					return resp;
 				} else if (resp.status === 400){
-					throw resp.status+ ' 400: Malformed Request | 409: Username Taken';
+					throw resp.status +' 400: Malformed Request | 409: Username Taken';
 				}
-			return resp.status;
 			});
 	}
 
@@ -275,4 +275,42 @@ export default class API {
 				}
 			});
 	}
+
+
+	putUpdatePost(id, postObject){
+		return fetch(`${API_URL}/post/?id=${id}`, {
+			method: 'PUT',
+			body: JSON.stringify(postObject),
+			headers: {
+				'Accept': 'application/json',
+				'Authorization': 'Token '+TOKEN,
+				'Content-Type': 'application/json'
+			} })
+			.then(function(resp) {
+				if(resp.status === 200){
+					return resp;
+				} else {
+					throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token';
+				}
+			});
+	}
+
+	deleteUpdatePost(id){
+		return fetch(`${API_URL}/post/?id=${id}`, {
+			method: 'delete',
+			headers: {
+				'Accept': 'application/json',
+				'Authorization': 'Token '+TOKEN
+			} })
+			.then(function(resp) {
+				if(resp.status === 200){
+					return resp;
+				} else {
+					throw resp.status + ' 400: Malformed Request | 403: Invalid Auth Token | 404 Post Not Found';
+				}
+			});
+	}
+
+
+
 }

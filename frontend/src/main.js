@@ -19,4 +19,4 @@ bannerClass.style = 'align-items: center; justify-content: center';
 var mainRole = document.querySelector('main');
 
 helper.addLogin(api, mainRole, {class:'loginContainer', id:'frontpageUnamePass'});
-helper.addRegistration(api, mainRole, {class:'formContainer', id:'frontpageRegistration', style:'background-color:black;'});
+helper.addRegistration(api, mainRole);

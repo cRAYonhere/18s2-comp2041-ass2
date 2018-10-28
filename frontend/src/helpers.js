@@ -236,7 +236,9 @@ function checkCredentials(api, credential){
  */
 function loggedIn(api, main){
 	//removes the loginDiv
-	document.getElementById('frontpageUnamePass').remove();
+	if(document.getElementById('frontpageUnamePass')){
+		document.getElementById('frontpageUnamePass').remove();
+	}
 	navigation(api, main);
 	feed(api, main);
 }
@@ -245,6 +247,46 @@ function loggedIn(api, main){
 Registration Form
 ***********************************************************/
 
+async function registrationSubmitBtnClicked(api){
+	var slaveName = document.getElementsByName('slaveName')[0].value;
+	var newUname = document.getElementsByName('newUname')[0].value;
+	var uEmailAddress = document.getElementsByName('uEmailAddress')[0].value;
+	var newPassword = document.getElementsByName('newPassword')[0].value;
+	var confirmNewPassword = document.getElementsByName('confirmNewPassword')[0].value;
+
+	if (isAnyStringEmpty([slaveName, newUname, uEmailAddress, newPassword, confirmNewPassword]) !== false) {
+		showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Incorrect Input.', 'formFieldError');
+	} else {
+		var retVal1 = newPasswordCheck(newPassword,confirmNewPassword);
+		var retVal2 = newEmailCheck(uEmailAddress);
+		if(retVal1 && retVal2){
+			var registrationObject = {
+				'username': newUname,
+				'password': confirmNewPassword,
+				'email': uEmailAddress,
+				'name': slaveName
+			}
+			var response = await api.postRegistration(registrationObject);
+			//console.log(response);
+			if(response.status === 200){
+				document.getElementById('userDisplay').remove();
+				loggedIn(api, document.querySelector('main'));
+			} else if (response.status === 409) {
+				showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Username not available.', 'formFieldError');
+			} else if (response.status == 400) {
+				showErrorAfter(document.getElementById('confirmNewUserPassword'), 'I feel broken. Please try again.', 'formFieldError');
+			} else {
+				throw response.status + ': Malformed response from postRegistration()';
+			}
+		} else {
+			if(!retVal1){
+				showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Passwords Do Not Match.', 'formFieldError');
+			} else if (!retVal2) {
+				showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Incorrect Email.', 'formFieldError');
+			}
+		}
+	}
+}
 /**
  * Takes a element and options
  * If regBtn is found then it's visibility is changed to inline
@@ -254,7 +296,7 @@ Registration Form
  * populateRegistrationForm funtion is called and form elements are added to formDiv
  * submitRegistrationForm function is called to listen to form submission
  */
-export function addRegistration(api, parentElement, options){
+export function addRegistration(api, parentElement){
 	var regBtn = parentElement.querySelector('#registrationBtn');
 	var submitBtn = parentElement.querySelector('#submitLoginBtn');
 	//Checks for a loginDiv
@@ -272,11 +314,11 @@ export function addRegistration(api, parentElement, options){
 		var regPageHeader = createElement('h1', null, {id:'registrationPage',style:'color:#1ec503'});
 		regPageHeader.innerHTML = 'Register';
 		document.getElementById('frontpageUnamePass').remove();
-		appendElement(parentElement, regPageHeader);
-		var formDiv = createElement('div', null, options);
+		var formDiv = createElement('div', null, {id: 'userDisplay'});
+		appendElement(formDiv, regPageHeader);
 		populateRegistrationForm(formDiv);
 		appendElement(parentElement, formDiv);
-		submitRegistrationForm(api, parentElement);
+		submitRegistrationForm(api, formDiv);
 	});
 }
 
@@ -337,48 +379,9 @@ function populateRegistrationForm(formDiv){
  * EventListener listening to clicking of submit form button
  * the form details are collected and a validation is carried out
  */
-async function submitRegistrationForm(api, parentElement){
-	var submitRegBtn = parentElement.querySelector('#submitRegBtn');
-	submitRegBtn.addEventListener('click',async function(){
-
-		var slaveName = document.getElementsByName('slaveName')[0].value;
-		var newUname = document.getElementsByName('newUname')[0].value;
-		var uEmailAddress = document.getElementsByName('uEmailAddress')[0].value;
-		var newPassword = document.getElementsByName('newPassword')[0].value;
-		var confirmNewPassword = document.getElementsByName('confirmNewPassword')[0].value;
-
-		if (isAnyStringEmpty([slaveName, newUname, uEmailAddress, newPassword, confirmNewPassword]) !== false) {
-			showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Incorrect Input.', 'formFieldError');
-		} else {
-			var retVal1 = newPasswordCheck(newPassword,confirmNewPassword);
-			var retVal2 = newEmailCheck(uEmailAddress);
-			if(retVal1 && retVal2){
-				var registrationObject = {
-					'username': newUname,
-					'password': confirmNewPassword,
-					'email': uEmailAddress,
-					'name': slaveName
-				}
-				var statusNb = await api.postRegistration(registrationObject);
-				if(statusNb === 200){
-					feed(api, parentElement);
-				} else if (statusNb === 409) {
-					showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Username not available.', 'formFieldError');
-				} else if (statusNb == 400) {
-					showErrorAfter(document.getElementById('confirmNewUserPassword'), 'I feel broken. Please try again.', 'formFieldError');
-				} else {
-					throw statusNb+': Malformed response from postRegistration()';
-				}
-
-			} else {
-				if(!retVal1){
-					showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Passwords Do Not Match.', 'formFieldError');
-				} else if (!retVal2) {
-					showErrorAfter(document.getElementById('confirmNewUserPassword'), 'Incorrect Email.', 'formFieldError');
-				}
-			}
-		}
-	});
+function submitRegistrationForm(api, formDiv){
+	var submitRegBtn = formDiv.querySelector('#submitRegBtn');
+	submitRegBtn.addEventListener('click',registrationSubmitBtnClicked.bind(null,api));
 }
 
 /*
@@ -709,6 +712,9 @@ function follow(api, mainRole){
 	appendElement(mainRole, followDiv);
 
 	searchBtn.addEventListener('click', async function(event) {
+		if(document.getElementById('followError') != null ){
+			document.getElementById('followError').remove();
+		}
 		var followConfirmationBtn = document.getElementsByClassName('followConfirmation-Btn');
 		for( let i = 0; i < followConfirmationBtn.length; i++){
 			document.getElementById(followConfirmationBtn[i].getAttribute('id')).remove();
@@ -794,9 +800,22 @@ function newPost(api, mainRole){
 
 	submitBtn.addEventListener('click', function() {
 
+		var imgElement = document.getElementById('post-image');
 		var descElement = document.getElementById('post-description');
+		var postBtn = document.getElementById('confirm-post-submission');
+
 		var post_desc = document.getElementsByName('description')[0].value;
 		let imageRaw = document.getElementsByName('uploadImageFile')[0].files;
+
+
+		//https://www.w3schools.com/jsref/met_element_removeeventlistener.asp
+		postBtn.style.display='none';
+		descElement.style.display='none';
+		imgElement.style.display='none';
+
+		if(postBtn.removeEventListener){
+			postBtn.removeEventListener('click', newPostUploadBtnClicked);
+		}
 
 		if (imageRaw && imageRaw[0] && isAnyStringEmpty([post_desc]) === false) {
 			var errorNewPost = document.getElementById('errorNewPost');
@@ -836,27 +855,34 @@ function newPost(api, mainRole){
 	});
 }
 
+async function newPostUploadBtnClicked(object) {
+	var displayPostBtn = document.getElementById('confirm-post-submission');
+	var errorNewPost = document.getElementById('errorNewPost');
+	if(errorNewPost){
+		document.getElementById('errorNewPost').remove();
+	}
+	var resp = await object.api.postPost(object.postObject);
+	if (resp.status === 200){
+		alert('Post Uploaded');
+		document.getElementById('userDisplay').remove();
+		newPost(object.api, document.querySelector('main'));
+	} else {
+		showErrorAfter(displayPostBtn, 'Image Could Not Be processed. Try Again.', 'errorNewPost');
+	}
+}
+
 /**
  *
  *	Confirms if the user wants to continue with upload
  */
 function confirmNupload(api, postObject){
 	var displayPostBtn = document.getElementById('confirm-post-submission');
-	displayPostBtn.style.display = '';
-	displayPostBtn.addEventListener('click', async function() {
-		var errorNewPost = document.getElementById('errorNewPost');
-		if(errorNewPost){
-			document.getElementById('errorNewPost').remove();
-		}
-		var resp = await api.postPost(postObject);
-		if (resp.status === 200){
-			alert('Post Uploaded');
-			document.getElementById('userDisplay').remove();
-			newPost(api, document.querySelector('main'));
-		} else {
-			showErrorAfter(displayPostBtn, 'Image Could Not Be processed. Try Again.', 'errorNewPost');
-		}
-	});
+	displayPostBtn.style.display = 'block';
+	var object={
+		'api':api,
+		'postObject': postObject
+	};
+	displayPostBtn.addEventListener('click', newPostUploadBtnClicked.bind(null, object));
 }
 
 /***********************************************************
@@ -970,28 +996,31 @@ function editProfile(api, main){
 	var editProfileBtn = createElement('p', 'Edit Profile',{id:'editProfile', class: 'edit-profile-btn'});
 	editProfileBtn.style.fontWeight = 'bold';
 	appendElement(userProfileDisplay, editProfileBtn);
-	//console.log(userProfileDisplay);
 
-	function editProfileDetails(event){
+	async function editProfileDetails(event){
 		var newPostNav = document.getElementById('myProfileNav');
 		newPostNav.innerHTML = '->'+'Edit Profile'+'<-';
 		document.getElementById('userDisplay').remove();
 		var updateProfileDiv = createElement('div', null,{id:'userDisplay', class: 'updateProfile'});
 		var submitBtn = createElement('p', '| submit |', {id: 'submitchangeOrderBtn', class: 'submit-Btn'});
-
+		var response = await api.getUserData();
+		USER_DATA = await response.json();
 		populateChangeFields(updateProfileDiv);
 
 		appendElement(updateProfileDiv, submitBtn);
 		appendElement(main, updateProfileDiv);
 
-
-
-		submitBtn.addEventListener('click', function(){
+		submitBtn.addEventListener('click', async function(){
 			var inputValues = extractValueFromChangeFields();
 			var changeObject = createChangeObject(inputValues);
 			//console.log(changeObject);
 			if(changeObject[1] === 1){
 				api.putProfileUpdate(changeObject[0]);
+				alert('Profile Updated');
+				//document.getElementById('userDisplay').remove();
+				updateNavigationBar(3);
+				await showProfile(api, document.querySelector('main'));
+				editDelete(api, document.querySelector('main'));
 			} else if(changeObject[1] === 2){
 				// Do nothing
 			}
@@ -1008,6 +1037,7 @@ function createChangeObject(values){
 	var changeFlag = 0;
 	var holdFlag = 0;
 	var changeObject = {};
+
 	if(values.email != '' && values.email != null){
 		changeFlag = 1;
 		if(newEmailCheck(values.email)){
@@ -1019,22 +1049,29 @@ function createChangeObject(values){
 
 	}
 
+	//Update password
+	if(values.newPassword == '' || values.newPassword == null, values.confirmPassword == '' || values.confirmPassword == null){
+		//Do Nothing
+	}else{
+		if(holdFlag === 0){
+			if(values.newPassword === values.confirmPassword){
+				changeFlag = 1;
+				changeObject['password'] = values.confirmPassword;
+			} else {
+				holdFlag = 1;
+				showErrorAfter(document.getElementById('confirmChangePassword'),'Passwords Do Not Match','updateProfile');
+			}
+		}
+	}
+
+
+
 	//Update name
 	if(values.officialName != '' && values.officialName != null && holdFlag === 0){
 		changeFlag = 1;
 		changeObject['name'] = values.officialName;
 	}
 
-	//Update password
-	if(isAnyStringEmpty([values.newPassword, values.confirmPassword]) === false && holdFlag === 0){
-		if(values.newPassword === values.confirmPassword){
-			changeFlag = 1;
-			changeObject['password'] = values.confirmPassword;
-		} else {
-			holdFlag = 1;
-			showErrorAfter(document.getElementById('confirmChangePassword'),'Passwords Do Not Match','updateProfile');
-		}
-	}
 	if(holdFlag === 1){
 		changeFlag = 2;
 	}
@@ -1042,15 +1079,18 @@ function createChangeObject(values){
 }
 
 function populateChangeFields(updateProfileDiv){
+
+	//console.log(USER_DATA);
+
 	var changeName = createElement('label', 'New Name', {for:'changeName'});
 	changeName.style.fontWeight = 'bold';
-	var inputName = createElement('input', null, {class: 'change-field', id: 'changeName', type: 'text', placeholder:'Enter New Name'});
+	var inputName = createElement('input', null, {class: 'change-field', id: 'changeName', type: 'text', placeholder:USER_DATA.username});
 	appendElement(updateProfileDiv, changeName);
 	appendElement(updateProfileDiv, inputName);
 
 	var changeEmail = createElement('label', 'New Email Address', {for:'changeEmail'});
 	changeEmail.style.fontWeight = 'bold';
-	var inputEmail = createElement('input', null, {class: 'change-field', id: 'changeEmail', type: 'email', placeholder:' Enter New Email Address'});
+	var inputEmail = createElement('input', null, {class: 'change-field', id: 'changeEmail', type: 'email', placeholder:USER_DATA.email});
 	appendElement(updateProfileDiv, changeEmail);
 	appendElement(updateProfileDiv, inputEmail);
 
@@ -1093,16 +1133,177 @@ function editPost(api, main){
 
 		var editPostId = event.target.id;
 		var postId = editPostId.match(/^(\d+).+/)[1];
+		var myProfileNav = document.getElementById('myProfileNav');
+		myProfileNav.innerHTML = 'My Profile';
 		var newPostNav = document.getElementById('newPostNav');
 		newPostNav.innerHTML = '->'+'Edit Post'+'<-';
 		document.getElementById('userDisplay').remove();
 		var newPostDiv = createElement('div', null,{id:'userDisplay', class: 'editPost'});
 		appendElement(main, newPostDiv);
+		updatePost(api, newPostDiv, postId);
 
-		// XXX create new display div for update or delete post
 	}
 
 	for(let i = 0; i < editPostsElement.length; i++) {
 		editPostsElement[i].addEventListener('click',editPostEvent,false);
 	}
+}
+
+function updatePost(api, mainRole, postId){
+	var centerDiv = createElement('div', null,{id:'centerDivNewPost', class: 'center-div'});
+
+
+	var postDesc = createElement('label', 'Description', {for:'postDescription'});
+	postDesc.style.fontWeight = 'bold';
+	var descriptionElement = createElement('input', null, {class: 'description-field', id: 'updatePostDescription', type: 'text', placeholder:'Add your new description here', name: 'description', require:true});
+	appendElement(centerDiv, postDesc);
+	appendElement(centerDiv, descriptionElement);
+
+	var upImage = createElement('input', null, {class: 'upload-file', id: 'updateImage', type: 'file', name: 'uploadImageFile', require:true});
+	var submitBtn = createElement('p', '| submit |', {id: 'submitUpdatePostBtn', class: 'submit-Btn'});
+	var deleteBtn = createElement('p', '| DELETE POST |', { id:'confirmPostDelete', class: 'confirm-delete-post'});
+
+	appendElement(centerDiv, upImage);
+	appendElement(centerDiv, submitBtn);
+	appendElement(centerDiv, deleteBtn);
+	appendElement(mainRole, centerDiv);
+
+	centerDiv.appendChild(createElement('img', null, { id:'displayUpdatedImage', src: '#', class: 'post-image', style:'display:none;'}));
+	centerDiv.appendChild(createElement('p', null, { id:'displayUpdatedDescription', class: 'post-text-box', style:'display:none;'}));
+	centerDiv.appendChild(createElement('p', '| UPDATE POST |', { id:'confirmPostUpdate', class: 'confirm-post', style:'display:none;'}));
+
+
+	submitBtn.addEventListener('click', function() {
+		var imgElement = document.getElementById('displayUpdatedImage');
+		var descElement = document.getElementById('displayUpdatedDescription');
+		var postBtn = document.getElementById('confirmPostUpdate');
+
+
+		var post_desc = document.getElementById('updatePostDescription').value;
+		let imageRaw = document.getElementById('updateImage').files;
+
+		//Ensure description is hidden at the beginning
+		imgElement.style.display='none';
+		descElement.style.display='none';
+		postBtn.style.display='none';
+		//https://www.w3schools.com/jsref/met_element_removeeventlistener.asp
+		if(postBtn.removeEventListener){
+			postBtn.removeEventListener('click', postUpdateClicked);
+		}
+
+
+		var errorUpdatePost = document.getElementById('errorUpdatePost');
+		if(errorUpdatePost){
+			document.getElementById('errorUpdatePost').remove();
+		}
+
+		if (imageRaw && imageRaw[0] && isAnyStringEmpty([post_desc]) === false) {
+
+			//https://stackoverflow.com/questions/22172604/convert-image-url-to-base64/22172860
+			//https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
+			const reader = new FileReader();
+			reader.addEventListener('load', function () {
+				var base64Img = reader.result;
+				var pngRE = /data:image\/png;base64,(.+)/;
+				var base64Encoding = pngRE.exec(base64Img);
+				if(base64Encoding === null){
+					showErrorAfter(upImage, 'Incorrect Image format.', 'errorUpdatePost');
+				} else {
+					descElement.style.display='block';
+					descElement.innerHTML = post_desc;
+					let img = document.querySelector('img');  // $('img')[0]
+					img.style.display='block';
+					img.src = URL.createObjectURL(imageRaw[0]);
+					confirmNupdate(api, {
+							'description_text' : post_desc,
+							'src': base64Encoding[1]
+					}, postId);
+				}
+
+			}, false);
+
+			reader.readAsDataURL(imageRaw[0]);
+		} else if (imageRaw && imageRaw[0]){
+
+			const reader = new FileReader();
+			reader.addEventListener('load', function () {
+				var base64Img = reader.result;
+				var pngRE = /data:image\/png;base64,(.+)/;
+				var base64Encoding = pngRE.exec(base64Img);
+				if(base64Encoding === null){
+					showErrorAfter(upImage, 'Incorrect Image format.', 'errorUpdatePost');
+				} else {
+					let img = document.querySelector('img');  // $('img')[0]
+					img.style.display='block';
+					img.src = URL.createObjectURL(imageRaw[0]);
+					confirmNupdate(api, {'src': base64Encoding[1]}, postId);
+				}
+
+			}, false);
+
+			reader.readAsDataURL(imageRaw[0]);
+		} else if (isAnyStringEmpty([post_desc]) === false) {
+			descElement.style.display='block';
+			descElement.innerHTML = post_desc;
+			confirmNupdate(api, {'description_text' : post_desc}, postId);
+		} else {
+			showErrorAfter(upImage, 'Please add Description or Image.', 'errorUpdatePost');
+		}
+	});
+
+	deleteBtn.addEventListener('click', async function() {
+		var resp = await api.deleteUpdatePost(postId);
+
+		if (resp.status === 200){
+			alert('Post Deleted');
+			//document.getElementById('userDisplay').remove();
+			updateNavigationBar(3);
+			await showProfile(api, document.querySelector('main'));
+			editDelete(api, document.querySelector('main'));
+		} else {
+			var displayPostBtn = document.getElementById('confirmPostUpdate');
+			showErrorAfter(displayPostBtn, 'Post Not Found. Try Again.', 'errorUpdatePost');
+		}
+	});
+
+}
+
+async function postUpdateClicked(object) {
+	var displayPostBtn = document.getElementById('confirmPostUpdate');
+
+	var errorUpdatePost = document.getElementById('errorUpdatePost');
+	if(errorUpdatePost){
+		document.getElementById('errorUpdatePost').remove();
+	}
+
+	var resp = await object.api.putUpdatePost(object.postId, object.postObject);
+
+	if (resp.status === 200){
+		alert('Post Updated');
+		//document.getElementById('userDisplay').remove();
+		updateNavigationBar(3);
+		await showProfile(object.api, document.querySelector('main'));
+		editDelete(object.api, document.querySelector('main'));
+	} else {
+		showErrorAfter(displayPostBtn, 'Image Could Not Be processed. Try Again.', 'errorUpdatePost');
+	}
+
+}
+
+/**
+ *
+ *	Confirms if the user wants to continue with upload
+ */
+function confirmNupdate(api, postObject, postId){
+	var displayPostBtn = document.getElementById('confirmPostUpdate');
+	displayPostBtn.style.display = 'block';
+
+	var object = {
+		'api': api,
+		'postObject': postObject,
+		'postId': postId
+	}
+
+	//https://toddmotto.com/avoiding-anonymous-javascript-functions/
+	displayPostBtn.addEventListener('click', postUpdateClicked.bind(null, object));
 }
